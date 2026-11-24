@@ -9,6 +9,8 @@ import { PHYS2_FACTS_PART6 } from './phys2FactsPart6';
 import { PHYS2_FACTS_PART7 } from './phys2FactsPart7';
 import { PHYS2_FACTS_PART8 } from './phys2FactsPart8';
 import { PHYS2_FACTS_PART9 } from './phys2FactsPart9';
+import { PHYS2_FACTS_PART10 } from './phys2FactsPart10';
+import { PHYS2_FACTS_PART11 } from './phys2FactsPart11';
 import { buildPhys2StructuredA } from './phys2StructuredA';
 import { buildPhys2StructuredB } from './phys2StructuredB';
 import { buildPhys2StructuredC } from './phys2StructuredC';
@@ -25,6 +27,9 @@ import { buildPhys2StructuredM } from './phys2StructuredM';
 import { buildPhys2StructuredN } from './phys2StructuredN';
 import { buildPhys2StructuredO } from './phys2StructuredO';
 import { buildPhys2StructuredP } from './phys2StructuredP';
+import { buildPhys2StructuredQ } from './phys2StructuredQ';
+import { buildPhys2StructuredR } from './phys2StructuredR';
+import { buildPhys2StructuredS } from './phys2StructuredS';
 
 const ALL_PHYS2_FACTS = [
   ...PHYS2_FACTS_PART1,
@@ -36,6 +41,8 @@ const ALL_PHYS2_FACTS = [
   ...PHYS2_FACTS_PART7,
   ...PHYS2_FACTS_PART8,
   ...PHYS2_FACTS_PART9,
+  ...PHYS2_FACTS_PART10,
+  ...PHYS2_FACTS_PART11,
 ];
 
 const PHYS2_CATEGORY_POOLS: Record<string, string[]> = {
@@ -160,6 +167,9 @@ const RAW_PHYS2_POOL: McqQuestion[] = [
   ...buildPhys2StructuredN(),
   ...buildPhys2StructuredO(),
   ...buildPhys2StructuredP(),
+  ...buildPhys2StructuredQ(),
+  ...buildPhys2StructuredR(),
+  ...buildPhys2StructuredS(),
 ];
 
 const seenPhys2Text = new Set<string>();
@@ -174,4 +184,4 @@ for (const q of RAW_PHYS2_POOL) {
   });
 }
 
-export const PHYS2_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_PHYS2.slice(0, 3000);
+export const PHYS2_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_PHYS2.slice(0, 4500);

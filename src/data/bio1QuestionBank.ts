@@ -9,6 +9,14 @@ import { buildBio1StructuredB } from './bio1StructuredB';
 import { buildBio1StructuredC } from './bio1StructuredC';
 import { buildBio1StructuredD } from './bio1StructuredD';
 import { buildBio1StructuredE } from './bio1StructuredE';
+import { buildBio1StructuredF } from './bio1StructuredF';
+import { buildBio1StructuredG } from './bio1StructuredG';
+import { buildBio1StructuredH } from './bio1StructuredH';
+import { buildBio1StructuredI } from './bio1StructuredI';
+import { buildBio1StructuredJ } from './bio1StructuredJ';
+import { buildBio1StructuredK } from './bio1StructuredK';
+import { buildBio1StructuredL } from './bio1StructuredL';
+import { buildBio1StructuredM } from './bio1StructuredM';
 
 const ALL_BIO1_FACTS = [...BIO1_FACTS_PART1, ...BIO1_FACTS_PART2, ...BIO1_FACTS_PART3];
 
@@ -1899,6 +1907,14 @@ const RAW_BIO1_POOL: McqQuestion[] = [
   ...buildBio1StructuredC(),
   ...buildBio1StructuredD(),
   ...buildBio1StructuredE(),
+  ...buildBio1StructuredF(),
+  ...buildBio1StructuredG(),
+  ...buildBio1StructuredH(),
+  ...buildBio1StructuredI(),
+  ...buildBio1StructuredJ(),
+  ...buildBio1StructuredK(),
+  ...buildBio1StructuredL(),
+  ...buildBio1StructuredM(),
 ];
 
 const DEDUPED_BIO1: McqQuestion[] = [];
@@ -1912,7 +1928,7 @@ for (const q of RAW_BIO1_POOL) {
     ...q,
     id: `bio1_q_${String(DEDUPED_BIO1.length + 1).padStart(4, '0')}`,
   });
-  if (DEDUPED_BIO1.length === 3000) break;
+  if (DEDUPED_BIO1.length === 5000) break;
 }
 
 export const BIO1_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_BIO1;

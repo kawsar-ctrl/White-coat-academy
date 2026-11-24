@@ -22,6 +22,11 @@ import { buildChem1StructuredM } from './chem1StructuredM';
 import { buildChem1StructuredN } from './chem1StructuredN';
 import { buildChem1StructuredO } from './chem1StructuredO';
 import { buildChem1StructuredP } from './chem1StructuredP';
+import { buildChem1StructuredQ } from './chem1StructuredQ';
+import { buildChem1StructuredR } from './chem1StructuredR';
+import { buildChem1StructuredS } from './chem1StructuredS';
+import { buildChem1StructuredT } from './chem1StructuredT';
+import { buildChem1StructuredU } from './chem1StructuredU';
 
 const ALL_CHEM1_FACTS = [
   ...CHEM1_FACTS_PART1,
@@ -122,6 +127,11 @@ const RAW_CHEM1_POOL: McqQuestion[] = [
   ...buildChem1StructuredN(),
   ...buildChem1StructuredO(),
   ...buildChem1StructuredP(),
+  ...buildChem1StructuredQ(),
+  ...buildChem1StructuredR(),
+  ...buildChem1StructuredS(),
+  ...buildChem1StructuredT(),
+  ...buildChem1StructuredU(),
 ];
 
 const seenChem1Text = new Set<string>();
@@ -136,4 +146,4 @@ for (const q of RAW_CHEM1_POOL) {
   });
 }
 
-export const CHEM1_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_CHEM1.slice(0, 4500);
+export const CHEM1_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_CHEM1.slice(0, 6000);

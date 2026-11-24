@@ -7,6 +7,8 @@ import { CHEM2_FACTS_PART4 } from './chem2FactsPart4';
 import { CHEM2_FACTS_PART5 } from './chem2FactsPart5';
 import { CHEM2_FACTS_PART6 } from './chem2FactsPart6';
 import { CHEM2_FACTS_PART7 } from './chem2FactsPart7';
+import { CHEM2_FACTS_PART8 } from './chem2FactsPart8';
+import { CHEM2_FACTS_PART9 } from './chem2FactsPart9';
 import { buildChem2StructuredA } from './chem2StructuredA';
 import { buildChem2StructuredB } from './chem2StructuredB';
 import { buildChem2StructuredC } from './chem2StructuredC';
@@ -24,6 +26,12 @@ import { buildChem2StructuredN } from './chem2StructuredN';
 import { buildChem2StructuredO } from './chem2StructuredO';
 import { buildChem2StructuredP } from './chem2StructuredP';
 import { buildChem2StructuredQ } from './chem2StructuredQ';
+import { buildChem2StructuredR } from './chem2StructuredR';
+import { buildChem2StructuredS } from './chem2StructuredS';
+import { buildChem2StructuredT } from './chem2StructuredT';
+import { buildChem2StructuredU } from './chem2StructuredU';
+import { buildChem2StructuredV } from './chem2StructuredV';
+import { buildChem2StructuredW } from './chem2StructuredW';
 
 const ALL_CHEM2_FACTS = [
   ...CHEM2_FACTS_PART1,
@@ -33,6 +41,8 @@ const ALL_CHEM2_FACTS = [
   ...CHEM2_FACTS_PART5,
   ...CHEM2_FACTS_PART6,
   ...CHEM2_FACTS_PART7,
+  ...CHEM2_FACTS_PART8,
+  ...CHEM2_FACTS_PART9,
 ];
 
 const CHEM2_CATEGORY_POOLS: Record<string, string[]> = {
@@ -119,6 +129,12 @@ const RAW_CHEM2_POOL: McqQuestion[] = [
   ...buildChem2StructuredO(),
   ...buildChem2StructuredP(),
   ...buildChem2StructuredQ(),
+  ...buildChem2StructuredR(),
+  ...buildChem2StructuredS(),
+  ...buildChem2StructuredT(),
+  ...buildChem2StructuredU(),
+  ...buildChem2StructuredV(),
+  ...buildChem2StructuredW(),
 ];
 
 const seenChem2Text = new Set<string>();
@@ -133,4 +149,4 @@ for (const q of RAW_CHEM2_POOL) {
   });
 }
 
-export const CHEM2_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_CHEM2.slice(0, 4500);
+export const CHEM2_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_CHEM2.slice(0, 6000);

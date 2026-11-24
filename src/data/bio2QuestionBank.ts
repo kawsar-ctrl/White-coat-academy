@@ -16,6 +16,15 @@ import { buildBio2StructuredI } from './bio2StructuredI';
 import { buildBio2StructuredJ } from './bio2StructuredJ';
 import { buildBio2StructuredK } from './bio2StructuredK';
 import { buildBio2StructuredL } from './bio2StructuredL';
+import { buildBio2StructuredM } from './bio2StructuredM';
+import { buildBio2StructuredN } from './bio2StructuredN';
+import { buildBio2StructuredO } from './bio2StructuredO';
+import { buildBio2StructuredP } from './bio2StructuredP';
+import { buildBio2StructuredQ } from './bio2StructuredQ';
+import { buildBio2StructuredR } from './bio2StructuredR';
+import { buildBio2StructuredS } from './bio2StructuredS';
+import { buildBio2StructuredT } from './bio2StructuredT';
+import { buildBio2StructuredU } from './bio2StructuredU';
 
 const ALL_BIO2_FACTS = [...BIO2_FACTS_PART1, ...BIO2_FACTS_PART2, ...BIO2_FACTS_PART3];
 
@@ -118,6 +127,15 @@ const RAW_BIO2_POOL: McqQuestion[] = [
   ...buildBio2StructuredJ(),
   ...buildBio2StructuredK(),
   ...buildBio2StructuredL(),
+  ...buildBio2StructuredM(),
+  ...buildBio2StructuredN(),
+  ...buildBio2StructuredO(),
+  ...buildBio2StructuredP(),
+  ...buildBio2StructuredQ(),
+  ...buildBio2StructuredR(),
+  ...buildBio2StructuredS(),
+  ...buildBio2StructuredT(),
+  ...buildBio2StructuredU(),
 ];
 
 const DEDUPED_BIO2: McqQuestion[] = [];
@@ -131,7 +149,7 @@ for (const q of RAW_BIO2_POOL) {
     ...q,
     id: `bio2_q_${String(DEDUPED_BIO2.length + 1).padStart(4, '0')}`,
   });
-  if (DEDUPED_BIO2.length === 3000) break;
+  if (DEDUPED_BIO2.length === 5000) break;
 }
 
 export const BIO2_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_BIO2;

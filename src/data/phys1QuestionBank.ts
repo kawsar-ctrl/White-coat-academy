@@ -8,6 +8,8 @@ import { PHYS1_FACTS_PART5 } from './phys1FactsPart5';
 import { PHYS1_FACTS_PART6 } from './phys1FactsPart6';
 import { PHYS1_FACTS_PART7 } from './phys1FactsPart7';
 import { PHYS1_FACTS_PART8 } from './phys1FactsPart8';
+import { PHYS1_FACTS_PART9 } from './phys1FactsPart9';
+import { PHYS1_FACTS_PART10 } from './phys1FactsPart10';
 import { buildPhys1StructuredA } from './phys1StructuredA';
 import { buildPhys1StructuredB } from './phys1StructuredB';
 import { buildPhys1StructuredC } from './phys1StructuredC';
@@ -21,6 +23,11 @@ import { buildPhys1StructuredJ } from './phys1StructuredJ';
 import { buildPhys1StructuredK } from './phys1StructuredK';
 import { buildPhys1StructuredL } from './phys1StructuredL';
 import { buildPhys1StructuredM } from './phys1StructuredM';
+import { buildPhys1StructuredN } from './phys1StructuredN';
+import { buildPhys1StructuredO } from './phys1StructuredO';
+import { buildPhys1StructuredP } from './phys1StructuredP';
+import { buildPhys1StructuredQ } from './phys1StructuredQ';
+import { buildPhys1StructuredR } from './phys1StructuredR';
 
 const ALL_PHYS1_FACTS = [
   ...PHYS1_FACTS_PART1,
@@ -31,6 +38,8 @@ const ALL_PHYS1_FACTS = [
   ...PHYS1_FACTS_PART6,
   ...PHYS1_FACTS_PART7,
   ...PHYS1_FACTS_PART8,
+  ...PHYS1_FACTS_PART9,
+  ...PHYS1_FACTS_PART10,
 ];
 
 const PHYS1_CATEGORY_POOLS: Record<string, string[]> = {
@@ -148,6 +157,11 @@ const RAW_PHYS1_POOL: McqQuestion[] = [
   ...buildPhys1StructuredK(),
   ...buildPhys1StructuredL(),
   ...buildPhys1StructuredM(),
+  ...buildPhys1StructuredN(),
+  ...buildPhys1StructuredO(),
+  ...buildPhys1StructuredP(),
+  ...buildPhys1StructuredQ(),
+  ...buildPhys1StructuredR(),
 ];
 
 const seenPhys1Text = new Set<string>();
@@ -162,4 +176,4 @@ for (const q of RAW_PHYS1_POOL) {
   });
 }
 
-export const PHYS1_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_PHYS1.slice(0, 3000);
+export const PHYS1_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_PHYS1.slice(0, 4500);
