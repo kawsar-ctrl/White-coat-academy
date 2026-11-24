@@ -4,7 +4,14 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
+import {
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  User,
+} from 'firebase/auth';
 import { auth, googleProvider } from './lib/firebase';
 import {
   calculateDailyPerformanceScore,
@@ -160,6 +167,22 @@ function MedExcelApp() {
   }
 
   useEffect(() => {
+    void getRedirectResult(auth).catch((err) => {
+      console.error('Google redirect sign-in error:', err);
+      const code =
+        err && typeof err === 'object' && 'code' in err
+          ? String((err as { code?: unknown }).code)
+          : '';
+      if (code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        setAuthError(
+          `এই ডোমেইনটি (${host}) Firebase-এর Authorized domains-এ যুক্ত নেই। Firebase Console থেকে ডোমেইনটি যোগ করুন।`
+        );
+      } else if (code && code !== 'auth/popup-closed-by-user') {
+        setAuthError(`গুগল সাইন-ইন সম্পন্ন করা যায়নি (${code})। অনুগ্রহ করে আবার চেষ্টা করুন।`);
+      }
+    });
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setAuthReady(true);
@@ -313,9 +336,42 @@ function MedExcelApp() {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'সাইন-ইন করা যায়নি';
-      if (!msg.includes('popup-closed-by-user')) {
-        setAuthError('গুগল সাইন-ইন সম্পন্ন করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।');
+      console.error('Google Sign-In error:', err);
+      const code =
+        err && typeof err === 'object' && 'code' in err
+          ? String((err as { code?: unknown }).code)
+          : '';
+
+      if (code === 'auth/popup-blocked') {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectErr) {
+          console.error('Google redirect fallback error:', redirectErr);
+          setAuthError('ব্রাউজারে পপ-আপ ব্লক করা আছে। পপ-আপ অনুমতি দিয়ে আবার চেষ্টা করুন।');
+          return;
+        }
+      }
+
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        return;
+      }
+
+      if (code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        setAuthError(
+          `এই ডোমেইনটি (${host}) Firebase-এর Authorized domains-এ যুক্ত নেই। Firebase Console থেকে ডোমেইনটি যোগ করুন।`
+        );
+      } else if (code === 'auth/operation-not-allowed') {
+        setAuthError('Firebase Console-এ Google Sign-In চালু (Enable) করা নেই।');
+      } else if (code === 'auth/network-request-failed') {
+        setAuthError('নেটওয়ার্ক সংযোগে সমস্যা হয়েছে। ইন্টারনেট যাচাই করে আবার চেষ্টা করুন।');
+      } else {
+        setAuthError(
+          code
+            ? `গুগল সাইন-ইন সম্পন্ন করা যায়নি (${code})। অনুগ্রহ করে আবার চেষ্টা করুন।`
+            : 'গুগল সাইন-ইন সম্পন্ন করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।'
+        );
       }
     } finally {
       setAuthLoading(false);
