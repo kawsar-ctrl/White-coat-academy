@@ -1,0 +1,908 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "Student Profile",
+      "description": "Private profile and study preferences for a Bangladeshi HSC Science / Medical Admission student.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "targetExam": {
+          "type": "string",
+          "enum": ["medical", "dental", "hsc_science"]
+        },
+        "hscClass": {
+          "type": "string",
+          "enum": ["11", "12", "admission"]
+        },
+        "college": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "dailyGoal": {
+          "type": "number"
+        },
+        "accountStatus": {
+          "type": "string",
+          "enum": ["active", "suspended"]
+        },
+        "adminNote": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "accessTier": {
+          "type": "string",
+          "enum": ["free_trial", "enrolled_pro", "lifetime_vip", "restricted"]
+        },
+        "accessStartsAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "accessExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "email", "targetExam", "hscClass", "dailyGoal", "createdAt", "updatedAt"]
+    },
+    "TopicStat": {
+      "title": "Chapter & Topic Mastery Stat",
+      "description": "Tracks a student's accuracy, question volume, and average solve time per chapter/topic.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "topicKey": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "attempted": {
+          "type": "number"
+        },
+        "correct": {
+          "type": "number"
+        },
+        "wrong": {
+          "type": "number"
+        },
+        "totalTimeSec": {
+          "type": "number"
+        },
+        "lastPracticedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "topicKey", "subjectId", "chapterId", "attempted", "correct", "wrong", "totalTimeSec", "lastPracticedAt"]
+    },
+    "TestAttempt": {
+      "title": "Mock or Medical Model Test Attempt",
+      "description": "Immutable record of a completed Mock Test, Medical Model Test, or Dental Model Test.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "testId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "testTitle": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "testType": {
+          "type": "string",
+          "enum": ["mock_test", "medical_model", "dental_model", "practice_drill"]
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "totalQuestions": {
+          "type": "number"
+        },
+        "answeredCount": {
+          "type": "number"
+        },
+        "correctCount": {
+          "type": "number"
+        },
+        "wrongCount": {
+          "type": "number"
+        },
+        "skippedCount": {
+          "type": "number"
+        },
+        "negativeMarks": {
+          "type": "number"
+        },
+        "netScore": {
+          "type": "number"
+        },
+        "maxScore": {
+          "type": "number"
+        },
+        "durationSec": {
+          "type": "number"
+        },
+        "weakTopics": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "testId", "testTitle", "testType", "subjectId", "totalQuestions", "answeredCount", "correctCount", "wrongCount", "skippedCount", "negativeMarks", "netScore", "maxScore", "durationSec", "weakTopics", "createdAt"]
+    },
+    "Bookmark": {
+      "title": "Bookmarked Question",
+      "description": "A question saved by the student for later revision.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "questionId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "questionId", "subjectId", "chapterId", "createdAt"]
+    },
+    "WrongAnswer": {
+      "title": "Wrong Answer Revision Record",
+      "description": "Tracks a question answered incorrectly by the student for targeted later revision.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "questionId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "selectedOptionIndex": {
+          "type": "number"
+        },
+        "wrongCount": {
+          "type": "number"
+        },
+        "lastWrongAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "questionId", "subjectId", "chapterId", "selectedOptionIndex", "wrongCount", "lastWrongAt"]
+    },
+    "AdminUser": {
+      "title": "Super Admin Role Assignment",
+      "description": "Trusted database role record granting Super Admin content management privileges.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "enum": ["super_admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "CustomInfographic": {
+      "title": "Topic-Based Infographic",
+      "description": "Interactive topic infographic created in the Super Admin panel.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "enum": ["bio_1", "bio_2", "chem_1", "chem_2", "phys_1", "phys_2", "eng", "gk"]
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "topicName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "titleBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "subtitleBn": {
+          "type": "string",
+          "maxLength": 260
+        },
+        "summaryBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "layoutStyle": {
+          "type": "string",
+          "enum": ["concept_map", "process_flow", "comparison_table"]
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "nodes": {
+          "type": "array"
+        },
+        "keyTakeawaysBn": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"]
+        },
+        "createdByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdByEmail": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "subjectId", "chapterId", "topicName", "titleBn", "subtitleBn", "summaryBn", "layoutStyle", "imageUrl", "nodes", "keyTakeawaysBn", "status", "createdByUid", "createdByEmail", "createdAt", "updatedAt"]
+    },
+    "CustomVideo": {
+      "title": "Topic-Based Video Lecture",
+      "description": "Topic-specific video lecture (smartboard scene + optional video link) created in the Super Admin panel.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "enum": ["bio_1", "bio_2", "chem_1", "chem_2", "phys_1", "phys_2", "eng", "gk"]
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "topicName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "titleBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "instructorBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "durationMin": {
+          "type": "number"
+        },
+        "videoUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "boardSummaryBn": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "boardPoints": {
+          "type": "array"
+        },
+        "narrationBn": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"]
+        },
+        "createdByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdByEmail": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "subjectId", "chapterId", "topicName", "titleBn", "instructorBn", "durationMin", "videoUrl", "boardSummaryBn", "boardPoints", "narrationBn", "status", "createdByUid", "createdByEmail", "createdAt", "updatedAt"]
+    },
+    "CustomQuestion": {
+      "title": "Topic-Based MCQ Question",
+      "description": "Custom MCQ question added per topic in the Super Admin panel.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "enum": ["bio_1", "bio_2", "chem_1", "chem_2", "phys_1", "phys_2", "eng", "gk"]
+        },
+        "medicalGroup": {
+          "type": "string",
+          "enum": ["bio", "chem", "phys", "eng", "gk"]
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "topicName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "hscLevel": {
+          "type": "string",
+          "enum": ["11", "12", "admission"]
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["board", "medical", "dental"]
+        },
+        "boardName": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "boardYear": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "pastExamType": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "pastExamSession": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "options": {
+          "type": "array"
+        },
+        "correctIndex": {
+          "type": "number"
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"]
+        },
+        "createdByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdByEmail": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "subjectId", "medicalGroup", "chapterId", "topicName", "hscLevel", "difficulty", "question", "options", "correctIndex", "explanation", "reference", "status", "createdByUid", "createdByEmail", "createdAt", "updatedAt"]
+    },
+    "CustomWorksheet": {
+      "title": "Topic-Based Worksheet",
+      "description": "Structured practice worksheet, CQ/assignment, or formula sheet added per topic.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "enum": ["bio_1", "bio_2", "chem_1", "chem_2", "phys_1", "phys_2", "eng", "gk"]
+        },
+        "chapterId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "topicName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "titleBn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "worksheetType": {
+          "type": "string",
+          "enum": ["practice_sheet", "cq_srijonshil", "formula_sheet", "assignment"]
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["hsc", "medical", "dental"]
+        },
+        "estimatedMinutes": {
+          "type": "number"
+        },
+        "instructionsBn": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "attachmentUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "tasks": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"]
+        },
+        "createdByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdByEmail": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "subjectId", "chapterId", "topicName", "titleBn", "worksheetType", "difficulty", "estimatedMinutes", "instructionsBn", "attachmentUrl", "tasks", "status", "createdByUid", "createdByEmail", "createdAt", "updatedAt"]
+    },
+    "DailyLeaderboard": {
+      "title": "Daily Leaderboard Container",
+      "description": "Parent date document (YYYY-MM-DD in Asia/Dhaka) anchoring daily top performer entries.",
+      "type": "object",
+      "properties": {
+        "dateKey": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["dateKey", "createdAt"]
+    },
+    "DailyPerformerEntry": {
+      "title": "Daily Performer Entry",
+      "description": "Public-safe daily study and exam performance record for ranking the daily top 3 performers without exposing PII.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dateKey": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "college": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "targetExam": {
+          "type": "string",
+          "enum": ["medical", "dental", "hsc_science"]
+        },
+        "questionsAttempted": {
+          "type": "number"
+        },
+        "correctCount": {
+          "type": "number"
+        },
+        "testsCompleted": {
+          "type": "number"
+        },
+        "bestNetScore": {
+          "type": "number"
+        },
+        "score": {
+          "type": "number"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "dateKey", "displayName", "photoUrl", "targetExam", "questionsAttempted", "correctCount", "testsCompleted", "bestNetScore", "score", "visibility", "createdAt", "updatedAt"]
+    },
+    "AccessPolicyConfig": {
+      "title": "Dynamic Access Policy Configuration",
+      "description": "Global dynamic subscription, trial duration, pricing, payment numbers, and feature access matrix managed by Super Admins.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "trialDurationDays": {
+          "type": "number"
+        },
+        "proPriceBdt": {
+          "type": "number"
+        },
+        "proDurationDays": {
+          "type": "number"
+        },
+        "requireSignInForAccess": {
+          "type": "boolean"
+        },
+        "freeDailyQuestionLimit": {
+          "type": "number"
+        },
+        "freeQuestionBankLimit": {
+          "type": "number"
+        },
+        "freeVisualLessonLimit": {
+          "type": "number"
+        },
+        "allowFreePractice": {
+          "type": "boolean"
+        },
+        "allowFreeFlashcards": {
+          "type": "boolean"
+        },
+        "allowFreeQuestionBank": {
+          "type": "boolean"
+        },
+        "allowFreeWrongBank": {
+          "type": "boolean"
+        },
+        "allowFreeMockTest": {
+          "type": "boolean"
+        },
+        "allowFreeMedicalModel": {
+          "type": "boolean"
+        },
+        "allowFreeVisualHub": {
+          "type": "boolean"
+        },
+        "allowFreeWorksheets": {
+          "type": "boolean"
+        },
+        "bkashNumber": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "nagadNumber": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "rocketNumber": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "paymentInstructionsBn": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "updatedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id", "trialDurationDays", "proPriceBdt", "proDurationDays", "requireSignInForAccess",
+        "freeDailyQuestionLimit", "freeQuestionBankLimit", "freeVisualLessonLimit",
+        "allowFreePractice", "allowFreeFlashcards", "allowFreeQuestionBank", "allowFreeWrongBank",
+        "allowFreeMockTest", "allowFreeMedicalModel", "allowFreeVisualHub", "allowFreeWorksheets",
+        "bkashNumber", "nagadNumber", "rocketNumber", "paymentInstructionsBn", "updatedByUid", "updatedAt"
+      ]
+    },
+    "EnrollmentRequest": {
+      "title": "Annual Pro Enrollment Request",
+      "description": "Student payment submission (bKash/Nagad/Rocket TrxID) requesting 1-year Full Access activation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "userEmail": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "planTier": {
+          "type": "string",
+          "enum": ["enrolled_pro"]
+        },
+        "durationDays": {
+          "type": "number"
+        },
+        "amountBdt": {
+          "type": "number"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["bkash", "nagad", "rocket", "bank"]
+        },
+        "senderNumber": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 30
+        },
+        "transactionId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 80
+        },
+        "studentNote": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"]
+        },
+        "adminNote": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "reviewedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id", "userId", "userName", "userEmail", "planTier", "durationDays",
+        "amountBdt", "paymentMethod", "senderNumber", "transactionId", "studentNote",
+        "status", "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private student profile containing PII, study goals, and subscription access tier."
+    },
+    "/users/{userId}/topicStats/{topicKey}": {
+      "schema": { "$ref": "#/entities/TopicStat" },
+      "description": "Per-topic mastery and accuracy tracking for a student."
+    },
+    "/users/{userId}/testAttempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/TestAttempt" },
+      "description": "Completed mock tests and medical/dental model test score history."
+    },
+    "/users/{userId}/bookmarks/{questionId}": {
+      "schema": { "$ref": "#/entities/Bookmark" },
+      "description": "Bookmarked questions for focused revision."
+    },
+    "/users/{userId}/wrongAnswers/{questionId}": {
+      "schema": { "$ref": "#/entities/WrongAnswer" },
+      "description": "Questions answered incorrectly by the student, stored for Wrong Answer Bank revision."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorized Super Admin role records."
+    },
+    "/customInfographics/{itemId}": {
+      "schema": { "$ref": "#/entities/CustomInfographic" },
+      "description": "Topic-based interactive infographics authored by Super Admins."
+    },
+    "/customVideos/{itemId}": {
+      "schema": { "$ref": "#/entities/CustomVideo" },
+      "description": "Topic-based video lectures authored by Super Admins."
+    },
+    "/customQuestions/{itemId}": {
+      "schema": { "$ref": "#/entities/CustomQuestion" },
+      "description": "Topic-based MCQ questions authored by Super Admins."
+    },
+    "/customWorksheets/{itemId}": {
+      "schema": { "$ref": "#/entities/CustomWorksheet" },
+      "description": "Topic-based worksheets and assignments authored by Super Admins."
+    },
+    "/dailyLeaderboards/{dateKey}": {
+      "schema": { "$ref": "#/entities/DailyLeaderboard" },
+      "description": "Date-keyed parent leaderboard document for daily top performer entries."
+    },
+    "/dailyLeaderboards/{dateKey}/entries/{userId}": {
+      "schema": { "$ref": "#/entities/DailyPerformerEntry" },
+      "description": "Public-safe daily performance records ranked to display each day's top 3 performers."
+    },
+    "/appConfig/{configId}": {
+      "schema": { "$ref": "#/entities/AccessPolicyConfig" },
+      "description": "Global dynamic access control, free trial, and annual pro enrollment policy managed by Super Admins."
+    },
+    "/enrollmentRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/EnrollmentRequest" },
+      "description": "Student payment TrxID requests for 1-year Full Access enrollment reviewed by Super Admins."
+    }
+  }
+}

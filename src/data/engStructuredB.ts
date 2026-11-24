@@ -1,0 +1,406 @@
+import { McqQuestion } from '../types/learning';
+import { buildMcq } from './bioQuestionHelpers';
+
+interface PrepEntry {
+  stem: string;
+  prep: string;
+  meaning: string;
+  sentence: string;
+}
+
+const ALL_PREPS = ['to', 'of', 'for', 'from', 'with', 'in', 'on', 'at', 'by', 'into', 'over', 'against', 'about', 'after', 'off', 'out'];
+
+const PREP_BANK: PrepEntry[] = [
+  { stem: 'abide', prep: 'by', meaning: 'মেনে চলা (নিয়ম/আইন)', sentence: 'Every citizen must abide ___ the laws of the country.' },
+  { stem: 'abstain', prep: 'from', meaning: 'বিরত থাকা', sentence: 'Doctors advise patients to abstain ___ smoking.' },
+  { stem: 'accede', prep: 'to', meaning: 'সম্মত হওয়া / রাজি হওয়া', sentence: 'The committee acceded ___ the interns’ reasonable demand.' },
+  { stem: 'accuse', prep: 'of', meaning: 'অভিযুক্ত করা', sentence: 'The quack was accused ___ medical negligence.' },
+  { stem: 'accustomed', prep: 'to', meaning: 'অভ্যস্ত', sentence: 'Medical students quickly become accustomed ___ night shifts.' },
+  { stem: 'acquit', prep: 'of', meaning: 'দোষ বা অভিযোগ থেকে খালাস দেওয়া', sentence: 'The judge acquitted the physician ___ all false charges.' },
+  { stem: 'adhere', prep: 'to', meaning: 'লেগে থাকা / দৃঢ়ভাবে অনুসরণ করা', sentence: 'We should strictly adhere ___ medical ethics.' },
+  { stem: 'adjacent', prep: 'to', meaning: 'সংলগ্ন / নিকটবর্তী', sentence: 'The emergency ward is adjacent ___ the ICU.' },
+  { stem: 'afflicted', prep: 'with', meaning: 'রোগ বা কষ্টে আক্রান্ত', sentence: 'Many villagers were afflicted ___ dengue fever.' },
+  { stem: 'akin', prep: 'to', meaning: 'সাদৃশ্যপূর্ণ / সমগোত্রীয়', sentence: 'Extreme fear is often akin ___ panic.' },
+  { stem: 'allergic', prep: 'to', meaning: 'অ্যালার্জি বা সংবেদনশীল', sentence: 'The child is severely allergic ___ penicillin.' },
+  { stem: 'aloof', prep: 'from', meaning: 'দূরে সরিয়ে রাখা / নিঃসঙ্গ', sentence: 'An examinee should keep aloof ___ distractions.' },
+  { stem: 'alternative', prep: 'to', meaning: 'বিকল্প', sentence: 'There is no alternative ___ hard work for admission success.' },
+  { stem: 'amenable', prep: 'to', meaning: 'বাধ্য / সাড়া দেয় এমন', sentence: 'Early-stage infections are amenable ___ antibiotic treatment.' },
+  { stem: 'analogous', prep: 'to', meaning: 'অনুরূপ / সাদৃশ্যপূর্ণ', sentence: 'The human eye is analogous ___ a camera.' },
+  { stem: 'antidote', prep: 'to', meaning: 'প্রতিষেধক (বিষ বা রোগের)', sentence: 'Atropine acts as an antidote ___ organophosphate poisoning.' },
+  { stem: 'anxious', prep: 'about', meaning: 'উদ্বিগ্ন', sentence: 'Parents are anxious ___ their children’s admission test.' },
+  { stem: 'apologize', prep: 'for', meaning: 'ক্ষমা চাওয়া (কোনো কাজের জন্য)', sentence: 'He apologized ___ arriving late at the clinic.' },
+  { stem: 'appetite', prep: 'for', meaning: 'ক্ষুধা বা তীব্র আগ্রহ', sentence: 'She has an insatiable appetite ___ medical knowledge.' },
+  { stem: 'approve', prep: 'of', meaning: 'অনুমোদন করা / সমর্থন করা', sentence: 'The board approved ___ the new research proposal.' },
+  { stem: 'apt', prep: 'at', meaning: 'দক্ষ / পটু', sentence: 'She is remarkably apt ___ solving organic chemistry mechanisms.' },
+  { stem: 'aspire', prep: 'to', meaning: 'উচ্চাকাঙ্ক্ষা করা', sentence: 'Thousands of students aspire ___ a seat in Dhaka Medical College.' },
+  { stem: 'assent', prep: 'to', meaning: 'সম্মতি দেওয়া', sentence: 'The director assented ___ the revised hospital duty roster.' },
+  { stem: 'atone', prep: 'for', meaning: 'প্রায়শ্চিত্ত করা', sentence: 'He tried to atone ___ his past carelessness.' },
+  { stem: 'attribute', prep: 'to', meaning: 'কারণ হিসেবে আরোপ করা', sentence: 'Doctors attribute her rapid recovery ___ timely surgery.' },
+  { stem: 'avail', prep: 'of', meaning: 'সুযোগ গ্রহণ করা', sentence: 'Students should avail themselves ___ every mock test.' },
+  { stem: 'averse', prep: 'to', meaning: 'বিমুখ / অনিচ্ছুক', sentence: 'No sincere learner is averse ___ rigorous practice.' },
+  { stem: 'aware', prep: 'of', meaning: 'সচেতন / অবগত', sentence: 'Everyone must be aware ___ preventive hygiene.' },
+  { stem: 'bereft', prep: 'of', meaning: 'বঞ্চিত / শূন্য', sentence: 'His argument was completely bereft ___ logic.' },
+  { stem: 'beset', prep: 'with', meaning: 'সমস্যা বা বিপদে বেষ্টিত', sentence: 'Rural clinics are often beset ___ a shortage of equipment.' },
+  { stem: 'beware', prep: 'of', meaning: 'সতর্ক হওয়া', sentence: 'Beware ___ fake medical coaching advertisements.' },
+  { stem: 'blind', prep: 'to', meaning: 'দোষ দেখেও না দেখার ভান করা / উদাসীন', sentence: 'A good supervisor is never blind ___ safety lapses.' },
+  { stem: 'boast', prep: 'of', meaning: 'দম্ভ বা গর্ব করা', sentence: 'Do not boast ___ your temporary success.' },
+  { stem: 'border', prep: 'on', meaning: 'প্রায় কাছাকাছি পৌঁছানো', sentence: 'Overconfidence often borders ___ arrogance.' },
+  { stem: 'bound', prep: 'for', meaning: 'গন্তব্যের উদ্দেশ্যে যাত্রা করা', sentence: 'The medical relief team is bound ___ Sylhet.' },
+  { stem: 'capable', prep: 'of', meaning: 'সক্ষম', sentence: 'Human T-cells are capable ___ destroying infected cells.' },
+  { stem: 'caution', prep: 'against', meaning: 'সতর্ক করে দেওয়া', sentence: 'Pharmacists caution patients ___ self-medication.' },
+  { stem: 'cling', prep: 'to', meaning: 'আঁকড়ে ধরে থাকা', sentence: 'Bacteria can cling ___ the mucosal lining.' },
+  { stem: 'coincide', prep: 'with', meaning: 'একই সময়ে বা মিলে যাওয়া', sentence: 'The seminar coincided ___ World Health Day.' },
+  { stem: 'compatible', prep: 'with', meaning: 'সামঞ্জস্যপূর্ণ / উপযোগী', sentence: 'Donor blood must be compatible ___ the recipient’s group.' },
+  { stem: 'compensate', prep: 'for', meaning: 'ক্ষতিপূরণ দেওয়া', sentence: 'Deep breathing tries to compensate ___ oxygen debt.' },
+  { stem: 'comply', prep: 'with', meaning: 'মেনে চলা (আদেশ/নীতি)', sentence: 'Laboratories must comply ___ biosafety guidelines.' },
+  { stem: 'composed', prep: 'of', meaning: 'গঠিত', sentence: 'Water is composed ___ hydrogen and oxygen.' },
+  { stem: 'conceal', prep: 'from', meaning: 'লুকিয়ে রাখা', sentence: 'Never conceal vital symptoms ___ your physician.' },
+  { stem: 'concentrate', prep: 'on', meaning: 'মনোযোগ কেন্দ্রীভূত করা', sentence: 'Concentrate ___ high-yield textbook chapters first.' },
+  { stem: 'conducive', prep: 'to', meaning: 'সহায়ক / উপকারী', sentence: 'Morning walks are conducive ___ cardiovascular health.' },
+  { stem: 'confide', prep: 'in', meaning: 'আস্থা রেখে গোপন কথা বলা', sentence: 'Patients confide ___ doctors they trust.' },
+  { stem: 'confined', prep: 'to', meaning: 'সীমাবদ্ধ বা শয্যাশায়ী', sentence: 'The elderly patient has been confined ___ bed for a week.' },
+  { stem: 'conform', prep: 'to', meaning: 'অনুযায়ী চলা', sentence: 'All hospital waste disposal must conform ___ WHO rules.' },
+  { stem: 'connive', prep: 'at', meaning: 'অপরাধ দেখেও উপেক্ষা করা', sentence: 'Regulators must not connive ___ counterfeit drugs.' },
+  { stem: 'conscious', prep: 'of', meaning: 'সচেতন', sentence: 'Be conscious ___ negative marking during the exam.' },
+  { stem: 'consist', prep: 'in', meaning: 'নিহিত থাকা (মূলতত্ত্ব)', sentence: 'True happiness consists ___ serving humanity.' },
+  { stem: 'conspicuous', prep: 'for', meaning: 'সহজে চোখে পড়ার মতো / সুপরিচিত', sentence: 'She is conspicuous ___ her clinical accuracy.' },
+  { stem: 'contend', prep: 'with', meaning: 'মোকাবিলা করা', sentence: 'Surgeons frequently contend ___ high-pressure emergencies.' },
+  { stem: 'contrary', prep: 'to', meaning: 'বিপরীত / পরিপন্থী', sentence: 'His test result was contrary ___ our initial expectations.' },
+  { stem: 'converge', prep: 'on', meaning: 'এক বিন্দুতে মিলিত হওয়া', sentence: 'Light rays converge ___ the retina.' },
+  { stem: 'convict', prep: 'of', meaning: 'অপরাধে দোষী সাব্যস্ত করা', sentence: 'The court convicted him ___ selling adulterated medicine.' },
+  { stem: 'cope', prep: 'with', meaning: 'তাল মিলিয়ে সামলে ওঠা', sentence: 'Freshers learn to cope ___ the vast medical syllabus.' },
+  { stem: 'crave', prep: 'for', meaning: 'তীব্রভাবে আকাঙ্ক্ষা করা', sentence: 'Patients in dehydration crave ___ water.' },
+  { stem: 'cure', prep: 'of', meaning: 'রোগ থেকে আরোগ্য লাভ করানো', sentence: 'Proper antibiotics cured him ___ typhoid.' },
+  { stem: 'deaf', prep: 'to', meaning: 'উপদেশ বা অনুনয়ে কর্ণপাত না করা', sentence: 'He remained deaf ___ his mentor’s warnings.' },
+  { stem: 'dedicate', prep: 'to', meaning: 'উৎসর্গ করা', sentence: 'Dr. Khan dedicated his life ___ rural healthcare.' },
+  { stem: 'deficient', prep: 'in', meaning: 'অভাবগ্রস্ত / ঘাটতিপূর্ণ', sentence: 'This diet is deficient ___ Vitamin D and calcium.' },
+  { stem: 'delight', prep: 'in', meaning: 'আনন্দ পাওয়া', sentence: 'True scholars delight ___ solving difficult concepts.' },
+  { stem: 'deprive', prep: 'of', meaning: 'বঞ্চিত করা', sentence: 'No child should be deprived ___ basic immunization.' },
+  { stem: 'derive', prep: 'from', meaning: 'উৎপন্ন বা প্রাপ্ত হওয়া', sentence: 'Quinine is derived ___ the bark of the Cinchona tree.' },
+  { stem: 'desist', prep: 'from', meaning: 'বিরত হওয়া', sentence: 'The authority ordered the clinic to desist ___ unsafe practices.' },
+  { stem: 'despair', prep: 'of', meaning: 'হতাশ হওয়া', sentence: 'Never despair ___ success even after a tough setback.' },
+  { stem: 'detrimental', prep: 'to', meaning: 'ক্ষতিকর', sentence: 'Excessive trans-fat is detrimental ___ arterial health.' },
+  { stem: 'devoid', prep: 'of', meaning: 'বিবর্জিত / শূন্য', sentence: 'The prescription was devoid ___ clear dosage instructions.' },
+  { stem: 'devoted', prep: 'to', meaning: 'নিবেদিতপ্রাণ', sentence: 'Florence Nightingale was devoted ___ nursing.' },
+  { stem: 'differ', prep: 'from', meaning: 'ভিন্ন বা আলাদা হওয়া (বৈশিষ্ট্যে)', sentence: 'Prokaryotic cells differ ___ eukaryotic cells in nucleus structure.' },
+  { stem: 'dispense', prep: 'with', meaning: 'বাদ দিয়ে চলা / ছাড়া কাজ চালানো', sentence: 'Modern microsurgery cannot dispense ___ sterilized instruments.' },
+  { stem: 'dispose', prep: 'of', meaning: 'নিষ্পত্তি বা ফেলে দেওয়া', sentence: 'Dispose ___ used syringes in biohazard bins.' },
+  { stem: 'divert', prep: 'from', meaning: 'দৃষ্টি বা পথ ঘুরিয়ে দেওয়া', sentence: 'Do not let social media divert you ___ your goal.' },
+  { stem: 'eligible', prep: 'for', meaning: 'যোগ্য / উপযুক্ত', sentence: 'Candidates with GPA 5.0 are eligible ___ the merit scholarship.' },
+  { stem: 'emerge', prep: 'from', meaning: 'বের হয়ে আসা / আত্মপ্রকাশ করা', sentence: 'Twelve cranial nerves emerge ___ the brain.' },
+  { stem: 'endow', prep: 'with', meaning: 'গুণ বা সম্পদে ভূষিত করা', sentence: 'Nature has endowed Bangladesh ___ fertile alluvial soil.' },
+  { stem: 'engaged', prep: 'in', meaning: 'কোনো কাজে নিয়োজিত', sentence: 'Scientists at icddr,b are engaged ___ vaccine trials.' },
+  { stem: 'envious', prep: 'of', meaning: 'ঈর্ষান্বিত', sentence: 'Do not be envious ___ your peer’s progress.' },
+  { stem: 'essential', prep: 'to', meaning: 'অত্যাবশ্যক', sentence: 'Hemoglobin is essential ___ oxygen transport.' },
+  { stem: 'excel', prep: 'in', meaning: 'কোনো বিষয়ে পারদর্শিতা দেখানো', sentence: 'She excels ___ anatomy and physiology.' },
+  { stem: 'exempt', prep: 'from', meaning: 'অব্যাহতি দেওয়া', sentence: 'Senior citizens were exempt ___ the consultation fee.' },
+  { stem: 'fatal', prep: 'to', meaning: 'প্রাণঘাতী / মারাত্মক', sentence: 'Untreated rabies is almost always fatal ___ humans.' },
+  { stem: 'fond', prep: 'of', meaning: 'অনুরাগী / পছন্দ করে এমন', sentence: 'Children are fond ___ sweet syrups.' },
+  { stem: 'grateful', prep: 'to', meaning: 'কৃতজ্ঞ (ব্যক্তির কাছে)', sentence: 'The recovered patient is deeply grateful ___ the surgical team.' },
+  { stem: 'heir', prep: 'to', meaning: 'উত্তরাধিকারী (সম্পত্তি বা ঐতিহ্যের)', sentence: 'Young doctors are heir ___ a noble humanitarian tradition.' },
+  { stem: 'hostile', prep: 'to', meaning: 'বৈরী / প্রতিকূল', sentence: 'Gastric acidity is hostile ___ most ingested bacteria.' },
+  { stem: 'immune', prep: 'to', meaning: 'রোগপ্রতিরোধী / অনাক্রম্য', sentence: 'Vaccinated infants become immune ___ polio.' },
+  { stem: 'impervious', prep: 'to', meaning: 'অভেদ্য / প্রভাবিত হয় না এমন', sentence: 'Suberin makes cork cell walls impervious ___ water.' },
+  { stem: 'indifferent', prep: 'to', meaning: 'উদাসীন', sentence: 'A compassionate doctor is never indifferent ___ a patient’s pain.' },
+  { stem: 'indulge', prep: 'in', meaning: 'আসক্ত বা মগ্ন হওয়া', sentence: 'Never indulge ___ unverified rumors.' },
+  { stem: 'infested', prep: 'with', meaning: 'পোকামাকড় বা রোগজীবাণুতে পূর্ণ', sentence: 'Stagnant pools were infested ___ Aedes larvae.' },
+  { stem: 'inherent', prep: 'in', meaning: 'অন্তর্নিহিত', sentence: 'Self-healing capacity is inherent ___ living tissues.' },
+  { stem: 'insist', prep: 'on', meaning: 'জোর দিয়ে দাবি করা', sentence: 'The physician insisted ___ a fasting blood sugar test.' },
+  { stem: 'intent', prep: 'on', meaning: 'দৃঢ়সংকল্পবদ্ধ', sentence: 'She is intent ___ securing a top rank in MBBS.' },
+  { stem: 'jealous', prep: 'of', meaning: 'ঈর্ষাকাতর', sentence: 'Never be jealous ___ someone else’s hard-earned rank.' },
+  { stem: 'keen', prep: 'on', meaning: 'অত্যন্ত আগ্রহী', sentence: 'He is keen ___ specializing in neurosurgery.' },
+  { stem: 'key', prep: 'to', meaning: 'চাবিকাঠি / মূল রহস্য', sentence: 'Daily revision is the key ___ long-term memory.' },
+  { stem: 'liable', prep: 'to', meaning: 'ঝুঁকিতে থাকা / প্রবণ', sentence: 'Malnourished children are liable ___ frequent infections.' },
+  { stem: 'long', prep: 'for', meaning: 'তীব্র আকাঙ্ক্ষা করা', sentence: 'Every aspirant longs ___ wearing the white coat.' },
+  { stem: 'marry', prep: 'to', meaning: 'বিবাহ বন্ধনে আবদ্ধ হওয়া (Passive-এ)', sentence: 'Dr. Karim was married ___ a pediatrician.' },
+  { stem: 'object', prep: 'to', meaning: 'আপত্তি করা', sentence: 'Patients rarely object ___ painless diagnostic scans.' },
+  { stem: 'oblivious', prep: 'of', meaning: 'ভুলে যাওয়া / অসচেতন', sentence: 'Deeply focused, he was oblivious ___ the passing hours.' },
+  { stem: 'peculiar', prep: 'to', meaning: 'একান্ত নিজস্ব / বৈশিষ্ট্যপূর্ণ', sentence: 'This genetic trait is peculiar ___ Mediterranean populations.' },
+  { stem: 'persist', prep: 'in', meaning: 'অটল থাকা / চালিয়ে যাওয়া', sentence: 'If fever persists ___ spite of rest, consult a doctor.' },
+  { stem: 'pertinent', prep: 'to', meaning: 'প্রাসঙ্গিক', sentence: 'Ask questions pertinent ___ the patient’s history.' },
+  { stem: 'preferable', prep: 'to', meaning: 'অধিকতর পছন্দনীয়', sentence: 'Prevention is always preferable ___ cure.' },
+  { stem: 'preside', prep: 'over', meaning: 'সভাপতিত্ব করা', sentence: 'The Principal presided ___ the white coat ceremony.' },
+  { stem: 'prevail', prep: 'over', meaning: 'জয়ী হওয়া / প্রাধান্য বিস্তার করা', sentence: 'Scientific truth will eventually prevail ___ superstition.' },
+  { stem: 'prohibit', prep: 'from', meaning: 'নিষেধ বা বিরত রাখা', sentence: 'Smoking is strictly prohibited ___ hospital premises — keep away from it.' },
+  { stem: 'prone', prep: 'to', meaning: 'প্রবণ / আক্রান্ত হওয়ার ঝুঁকিতে', sentence: 'Diabetic patients are prone ___ delayed wound healing.' },
+  { stem: 'reconcile', prep: 'to', meaning: 'মেনে নেওয়া (পরিস্থিতি)', sentence: 'One must reconcile oneself ___ disciplined study routines.' },
+  { stem: 'refrain', prep: 'from', meaning: 'বিরত থাকা', sentence: 'Please refrain ___ talking inside the ICU.' },
+  { stem: 'rely', prep: 'on', meaning: 'নির্ভর করা', sentence: 'Clinicians rely ___ evidence-based guidelines.' },
+  { stem: 'remedy', prep: 'for', meaning: 'প্রতিকার / ওষুধ', sentence: 'Oral rehydration is an effective remedy ___ dehydration.' },
+  { stem: 'replete', prep: 'with', meaning: 'পরিপূর্ণ', sentence: 'This textbook is replete ___ crisp anatomical diagrams.' },
+  { stem: 'resort', prep: 'to', meaning: 'অবলম্বন বা শরণাপন্ন হওয়া', sentence: 'Surgeons resort ___ amputation only as a last option.' },
+  { stem: 'respond', prep: 'to', meaning: 'সাড়া দেওয়া', sentence: 'The patient began to respond ___ the new therapy.' },
+  { stem: 'sanguine', prep: 'of', meaning: 'আশাবাদী', sentence: 'The doctors are sanguine ___ his full recovery.' },
+  { stem: 'sensitive', prep: 'to', meaning: 'সংবেদনশীল', sentence: 'The retina is extremely sensitive ___ light.' },
+  { stem: 'succumb', prep: 'to', meaning: 'নতি স্বীকার বা হার মানা', sentence: 'Many soldiers succumbed ___ severe injuries.' },
+  { stem: 'susceptible', prep: 'to', meaning: 'সহজে আক্রান্ত হয় এমন / সংবেদনশীল', sentence: 'Elderly individuals are more susceptible ___ pneumonia.' },
+  { stem: 'sympathize', prep: 'with', meaning: 'সহানুভূতি প্রকাশ করা', sentence: 'Good doctors always sympathize ___ their patients.' },
+  { stem: 'tantamount', prep: 'to', meaning: 'সমতুল্য', sentence: 'Skipping mock reviews is tantamount ___ wasting practice.' },
+  { stem: 'tolerant', prep: 'of', meaning: 'সহনশীল', sentence: 'A good leader is tolerant ___ constructive criticism.' },
+  { stem: 'versed', prep: 'in', meaning: 'অভিজ্ঞ / সুদক্ষ', sentence: 'She is well versed ___ clinical pharmacology.' },
+  { stem: 'void', prep: 'of', meaning: 'বর্জিত / শূন্য', sentence: 'An explanation void ___ evidence cannot be accepted.' },
+  { stem: 'yield', prep: 'to', meaning: 'নতি স্বীকার করা', sentence: 'Never yield ___ exam anxiety.' },
+  { stem: 'zealous', prep: 'for', meaning: 'উৎসাহী', sentence: 'The volunteers were zealous ___ the blood donation drive.' },
+];
+
+// Fix one sentence with "from" inside prohibited -> make clean
+PREP_BANK[110] = {
+  stem: 'prevent',
+  prep: 'from',
+  meaning: 'বাধা দেওয়া / প্রতিহত করা',
+  sentence: 'Vaccines prevent pathogens ___ multiplying in the body.',
+};
+
+interface IdiomEntry {
+  idiom: string;
+  meaning: string;
+  bn: string;
+}
+
+const IDIOM_BANK: IdiomEntry[] = [
+  { idiom: 'A bone of contention', meaning: 'A subject of dispute or disagreement', bn: 'বিবাদের বিষয়' },
+  { idiom: 'A bull in a china shop', meaning: 'A clumsy person in a delicate situation', bn: 'বেমানান ও অদক্ষ ব্যক্তি' },
+  { idiom: 'A feather in one’s cap', meaning: 'A notable achievement to be proud of', bn: 'গৌরবময় অর্জন' },
+  { idiom: 'A Herculean task', meaning: 'A job requiring enormous effort', bn: 'অতি দুঃসাধ্য কাজ' },
+  { idiom: 'A man of letters', meaning: 'A scholarly person or writer', bn: 'বিদ্বান বা সাহিত্যিক ব্যক্তি' },
+  { idiom: 'A Pandora’s box', meaning: 'A source of unforeseen troubles', bn: 'অপ্রত্যাশিত বিপদের উৎস' },
+  { idiom: 'A white elephant', meaning: 'A costly but useless possession', bn: 'ব্যয়বহুল কিন্তু অকাজের বস্তু' },
+  { idiom: 'Achilles’ heel', meaning: 'A fatal weakness or vulnerable spot', bn: 'দুর্বলতম স্থান' },
+  { idiom: 'Add fuel to the fire', meaning: 'To make a bad situation worse', bn: 'পরিস্থিতি আরও উত্তপ্ত করা' },
+  { idiom: 'All and sundry', meaning: 'Everyone without distinction', bn: 'সর্বসাধারণ / নির্বিশেষে সবাই' },
+  { idiom: 'An acid test', meaning: 'A decisive test of worth or truth', bn: 'অগ্নিপরীক্ষা / চূড়ান্ত যাচাই' },
+  { idiom: 'Apple of discord', meaning: 'A cause of quarrel or envy', bn: 'কলহের মূল কারণ' },
+  { idiom: 'At daggers drawn', meaning: 'In bitter enmity or open hostility', bn: 'সাপে-নেউলে সম্পর্ক / ঘোর শত্রুতা' },
+  { idiom: 'At sixes and sevens', meaning: 'In complete disorder or confusion', bn: 'এলোমেলো ও বিশৃঙ্খল অবস্থায়' },
+  { idiom: 'At the eleventh hour', meaning: 'At the very last moment', bn: 'শেষ মুহূর্তে' },
+  { idiom: 'Beat about the bush', meaning: 'To talk indirectly without coming to the point', bn: 'মূল প্রসঙ্গ এড়িয়ে ঘুরিয়ে কথা বলা' },
+  { idiom: 'Behind closed doors', meaning: 'Secretly in private', bn: 'গোপনে / রুদ্ধদ্বার অবস্থায়' },
+  { idiom: 'Bite the bullet', meaning: 'To face an unpleasant situation bravely', bn: 'কঠিন বাস্তবতা সাহসের সাথে মেনে নেওয়া' },
+  { idiom: 'Black sheep', meaning: 'A disgraceful member of a family or group', bn: 'কুলাঙ্গার' },
+  { idiom: 'Blue blood', meaning: 'Aristocratic or noble birth', bn: 'আভিজাত্য / সম্ভ্রান্ত বংশ' },
+  { idiom: 'Bolt from the blue', meaning: 'An unexpected sudden calamity', bn: 'বিনা মেঘে বজ্রপাত' },
+  { idiom: 'Break the ice', meaning: 'To initiate conversation in an awkward silence', bn: 'নীরবতা ভেঙে আলাপ শুরু করা' },
+  { idiom: 'Burn the midnight oil', meaning: 'To study or work late into the night', bn: 'গভীর রাত পর্যন্ত পড়াশোনা বা পরিশ্রম করা' },
+  { idiom: 'By fits and starts', meaning: 'Irregularly without steady effort', bn: 'অনিয়মিতভাবে / থেমে থেমে' },
+  { idiom: 'By leaps and bounds', meaning: 'Very rapidly', bn: 'দ্রুতগতিতে' },
+  { idiom: 'Call a spade a spade', meaning: 'To speak plainly without sugarcoating', bn: 'স্পষ্টাস্পষ্টি সত্য বলা' },
+  { idiom: 'Carry the day', meaning: 'To win victory or achieve success', bn: 'জয়লাভ করা' },
+  { idiom: 'Cast pearls before swine', meaning: 'To offer valuable things to unappreciative people', bn: 'উলুবনে মুক্তা ছড়ানো' },
+  { idiom: 'Cat and dog life', meaning: 'A life full of constant quarrels', bn: 'কলহপূর্ণ জীবন' },
+  { idiom: 'Catch red-handed', meaning: 'To catch someone in the act of wrongdoing', bn: 'হাতে-নাতে ধরা পড়া' },
+  { idiom: 'Cock and bull story', meaning: 'An absurd and unbelievable tale', bn: 'আজগুবি গাঁজাখুরি গল্প' },
+  { idiom: 'Come to light', meaning: 'To become known or revealed', bn: 'প্রকাশিত হওয়া' },
+  { idiom: 'Crocodile tears', meaning: 'Insincere or pretended sorrow', bn: 'মায়াকান্না' },
+  { idiom: 'Cry in the wilderness', meaning: 'An unheeded appeal or warning', bn: 'অরণ্যে রোদন' },
+  { idiom: 'Cut a sorry figure', meaning: 'To make a poor impression', bn: 'খুব খারাপ ফল করা' },
+  { idiom: 'Dead letter', meaning: 'A law or rule no longer enforced', bn: 'অকার্যকর আইন' },
+  { idiom: 'Die in harness', meaning: 'To die while still actively working', bn: 'কর্মরত অবস্থায় মৃত্যুবরণ করা' },
+  { idiom: 'Draw the line', meaning: 'To set a clear limit', bn: 'সীমা নির্ধারণ করা' },
+  { idiom: 'Every inch', meaning: 'Completely or in all respects', bn: 'সম্পূর্ণরূপে' },
+  { idiom: 'Face the music', meaning: 'To accept the unpleasant consequences', bn: 'কৃতকর্মের শাস্তি বা পরিণাম ভোগ করা' },
+  { idiom: 'Fair weather friend', meaning: 'A friend only during prosperous times', bn: 'সুসময়ের বন্ধু' },
+  { idiom: 'Fall flat', meaning: 'To fail completely to produce an effect', bn: 'সম্পূর্ণ ব্যর্থ হওয়া' },
+  { idiom: 'Far and wide', meaning: 'Over a large area or everywhere', bn: 'সর্বত্র / দূর-দূরান্তে' },
+  { idiom: 'Fish out of water', meaning: 'A person in an uncomfortable unfamiliar setting', bn: 'অস্বস্তিকর পরিবেশে পড়া ব্যক্তি' },
+  { idiom: 'Flesh and blood', meaning: 'Human nature or close blood relatives', bn: 'রক্তমাংসের মানুষ / আপনজন' },
+  { idiom: 'For good', meaning: 'Permanently or forever', bn: 'চিরতরে' },
+  { idiom: 'French leave', meaning: 'Absence from work without permission', bn: 'বিনা অনুমতিতে প্রস্থান বা ছুটি' },
+  { idiom: 'From hand to mouth', meaning: 'Living with bare necessities without savings', bn: 'দিন আনে দিন খায় অবস্থা' },
+  { idiom: 'Gala day', meaning: 'A day of festivity and celebration', bn: 'উৎসবের দিন' },
+  { idiom: 'Gift of the gab', meaning: 'Fluency and eloquence in speech', bn: 'বাগ্মিতা / সুন্দর কথা বলার ক্ষমতা' },
+  { idiom: 'Go to the dogs', meaning: 'To be ruined or deteriorated', bn: 'গোল্লায় যাওয়া / ধ্বংস হওয়া' },
+  { idiom: 'Hard and fast', meaning: 'Rigid and strictly fixed', bn: 'বাঁধাধরা / কঠোর' },
+  { idiom: 'Heart and soul', meaning: 'With complete dedication and energy', bn: 'সর্বান্তকরণে / প্রাণপণে' },
+  { idiom: 'Hold water', meaning: 'To stand logical scrutiny or be valid', bn: 'যুক্তিতে টিকে থাকা' },
+  { idiom: 'Hue and cry', meaning: 'A loud public clamor or protest', bn: 'হইচই বা শোরগোল' },
+  { idiom: 'In black and white', meaning: 'In written or printed form', bn: 'লিখিতভাবে' },
+  { idiom: 'In cold blood', meaning: 'Deliberately and ruthlessly without emotion', bn: 'ঠান্ডা মাথায় / নিষ্ঠুরভাবে' },
+  { idiom: 'In full swing', meaning: 'At the peak of activity', bn: 'পুরোদমে' },
+  { idiom: 'In hot water', meaning: 'In serious trouble', bn: 'বিপদে পড়া' },
+  { idiom: 'In no time', meaning: 'Very soon or quickly', bn: 'অতি শীঘ্রই' },
+  { idiom: 'Ins and outs', meaning: 'Full details of something', bn: 'খুঁটিনাটি সমস্ত বিষয়' },
+  { idiom: 'Keep at bay', meaning: 'To prevent danger from coming close', bn: 'বিপদ দূরে রাখা' },
+  { idiom: 'Kith and kin', meaning: 'Relatives and close friends', bn: 'আত্মীয়স্বজন' },
+  { idiom: 'Leave no stone unturned', meaning: 'To make every possible effort', bn: 'চেষ্টার কোনো ত্রুটি না রাখা' },
+  { idiom: 'Lion’s share', meaning: 'The largest and best portion', bn: 'সিংহভাগ' },
+  { idiom: 'Maiden speech', meaning: 'A speaker’s very first public speech', bn: 'প্রথম বক্তৃতা' },
+  { idiom: 'Make both ends meet', meaning: 'To manage within one’s limited income', bn: 'আয়-ব্যয়ের সামঞ্জস্য রাখা' },
+  { idiom: 'Nip in the bud', meaning: 'To destroy something at its very beginning', bn: 'অঙ্কুরেই বিনষ্ট করা' },
+  { idiom: 'Null and void', meaning: 'Invalid and having no legal force', bn: 'বাতিল ও অকার্যকর' },
+  { idiom: 'Of one’s own accord', meaning: 'Voluntarily without being forced', bn: 'স্বেচ্ছায়' },
+  { idiom: 'Once in a blue moon', meaning: 'Very rarely', bn: 'কদাচিৎ / খুব কমই' },
+  { idiom: 'Out of the blue', meaning: 'Completely unexpectedly', bn: 'হঠাৎ অভাবনীয়ভাবে' },
+  { idiom: 'Pros and cons', meaning: 'Arguments for and against', bn: 'সুবিধা ও অসুবিধা / খুঁটিনাটি' },
+  { idiom: 'Rain cats and dogs', meaning: 'To rain very heavily', bn: 'মুষলধারে বৃষ্টি হওয়া' },
+  { idiom: 'Read between the lines', meaning: 'To understand the hidden or implied meaning', bn: 'অন্তর্নিহিত বা গূঢ় অর্থ বোঝা' },
+  { idiom: 'Red-letter day', meaning: 'A memorably joyful and important day', bn: 'স্মরণীয় শুভ দিন' },
+  { idiom: 'See eye to eye', meaning: 'To agree completely with someone', bn: 'সম্পূর্ণ একমত হওয়া' },
+  { idiom: 'Silver lining', meaning: 'A hopeful aspect in a gloomy situation', bn: 'দুর্দিনে আশার আলো' },
+  { idiom: 'Swan song', meaning: 'The final performance or work before retirement or death', bn: 'শেষ কর্ম বা শেষ সৃষ্টি' },
+  { idiom: 'Take with a grain of salt', meaning: 'To view something with healthy skepticism', bn: 'সন্দেহের চোখে বা যাচাই করে নেওয়া' },
+  { idiom: 'Through thick and thin', meaning: 'Under all circumstances, good or bad', bn: 'সুখে-দুঃখে সব অবস্থায়' },
+  { idiom: 'Turn a deaf ear', meaning: 'To refuse to listen or ignore', bn: 'কর্ণপাত না করা' },
+  { idiom: 'Under the weather', meaning: 'Feeling slightly unwell or sick', bn: 'অসুস্থ বোধ করা' },
+  { idiom: 'Wild goose chase', meaning: 'A foolish and hopeless pursuit', bn: 'নিষ্ফল বা পণ্ডশ্রম' },
+  { idiom: 'Word for word', meaning: 'Verbatim or in the exact same words', bn: 'অক্ষরে অক্ষরে' },
+];
+
+export function buildEngStructuredB(): McqQuestion[] {
+  const list: McqQuestion[] = [];
+  let seq = 1;
+  const nextId = () => `esb_${String(seq++).padStart(4, '0')}`;
+
+  // 1. Appropriate Prepositions — Fill in the Blank + Meaning (2 × 130 = 260 MCQs)
+  PREP_BANK.forEach((p, i) => {
+    const wrongPreps = ALL_PREPS.filter((x) => x !== p.prep);
+    const rotated = [...wrongPreps.slice(i % wrongPreps.length), ...wrongPreps.slice(0, i % wrongPreps.length)];
+
+    list.push(
+      buildMcq({
+        id: nextId(),
+        subjectId: 'eng',
+        medicalGroup: 'eng',
+        chapterId: 'eng_vocab_prep',
+        visualLessonId: 'english_grammar',
+        hscLevel: 'admission',
+        difficulty: i % 2 === 0 ? 'medical' : 'dental',
+        question: `Fill in the blank with the appropriate preposition: "${p.sentence}"`,
+        correct: p.prep,
+        distractors: rotated.slice(0, 5),
+        explanation: `"${p.stem} ${p.prep}" একটি Appropriate Preposition, যার অর্থ "${p.meaning}"।`,
+        reference: 'Medical Admission English · Appropriate Prepositions',
+      })
+    );
+
+    const others = PREP_BANK.filter((x) => x.stem !== p.stem);
+    list.push(
+      buildMcq({
+        id: nextId(),
+        subjectId: 'eng',
+        medicalGroup: 'eng',
+        chapterId: 'eng_vocab_prep',
+        visualLessonId: 'english_grammar',
+        hscLevel: 'admission',
+        difficulty: 'board',
+        question: `What is the exact Bengali meaning of the prepositional phrase "${p.stem} ${p.prep}"?`,
+        correct: p.meaning,
+        distractors: others.slice(i % 40, (i % 40) + 8).map((x) => x.meaning),
+        explanation: `"${p.stem} ${p.prep}" অর্থ "${p.meaning}"। উদাহরণ: ${p.sentence.replace('___', p.prep)}`,
+        reference: 'Medical Admission English · Prepositional Meaning',
+      })
+    );
+  });
+
+  // 2. Idioms & Phrases (85 × 2 = 170 MCQs)
+  IDIOM_BANK.forEach((idItem, i) => {
+    const others = IDIOM_BANK.filter((x) => x.idiom !== idItem.idiom);
+    list.push(
+      buildMcq({
+        id: nextId(),
+        subjectId: 'eng',
+        medicalGroup: 'eng',
+        chapterId: 'eng_vocab_prep',
+        visualLessonId: 'english_grammar',
+        hscLevel: 'admission',
+        difficulty: i % 2 === 0 ? 'medical' : 'dental',
+        question: `The idiom "${idItem.idiom}" means:`,
+        correct: idItem.meaning,
+        distractors: others.slice(i % 40, (i % 40) + 8).map((x) => x.meaning),
+        explanation: `"${idItem.idiom}" বাগধারাটির অর্থ "${idItem.bn}" (${idItem.meaning})।`,
+        reference: 'Medical Admission English · Idioms & Phrases',
+      })
+    );
+    list.push(
+      buildMcq({
+        id: nextId(),
+        subjectId: 'eng',
+        medicalGroup: 'eng',
+        chapterId: 'eng_vocab_prep',
+        visualLessonId: 'english_grammar',
+        hscLevel: 'admission',
+        difficulty: 'board',
+        question: `Which idiom correctly expresses "${idItem.meaning}" (${idItem.bn})?`,
+        correct: idItem.idiom,
+        distractors: others.slice((i + 15) % 40, ((i + 15) % 40) + 8).map((x) => x.idiom),
+        explanation: `"${idItem.meaning}" (${idItem.bn}) বোঝাতে "${idItem.idiom}" ব্যবহৃত হয়।`,
+        reference: 'Medical Admission English · Idioms Application',
+      })
+    );
+  });
+
+  // 3. Phrasal / Group Verbs (35 × 2 = 70 MCQs)
+  const phrasals: Array<{ pv: string; meaning: string; sent: string }> = [
+    { pv: 'break out', meaning: 'হঠাৎ ছড়িয়ে পড়া (যুদ্ধ বা মহামারি)', sent: 'Cholera broke ___ in the flood-affected area.' },
+    { pv: 'break down', meaning: 'ভেঙে পড়া (স্বাস্থ্য বা যন্ত্র)', sent: 'His health broke ___ due to overwork.' },
+    { pv: 'break into', meaning: 'জোর করে প্রবেশ করা (চোর)', sent: 'Burglars broke ___ the pharmacy last night.' },
+    { pv: 'bring about', meaning: 'ঘটানো / বয়ে আনা', sent: 'Vaccination brought ___ a sharp drop in child mortality.' },
+    { pv: 'bring up', meaning: 'লালন-পালন করা বা প্রসঙ্গ তোলা', sent: 'She was brought ___ by her grandmother.' },
+    { pv: 'call off', meaning: 'বাতিল করা', sent: 'The strike was called ___ after negotiations.' },
+    { pv: 'call on', meaning: 'সংক্ষিপ্ত সাক্ষাৎ করা (ব্যক্তির সাথে)', sent: 'The intern called ___ the senior consultant.' },
+    { pv: 'carry out', meaning: 'পালন বা সম্পাদন করা (আদেশ/গবেষণা)', sent: 'Nurses carry ___ the doctor’s orders accurately.' },
+    { pv: 'come across', meaning: 'হঠাৎ দেখা বা খুঁজে পাওয়া', sent: 'I came ___ a rare medical case in the journal.' },
+    { pv: 'come round', meaning: 'জ্ঞান ফিরে পাওয়া / আরোগ্য হওয়া', sent: 'The patient came ___ an hour after anesthesia.' },
+    { pv: 'cut down', meaning: 'কমানো / হ্রাস করা', sent: 'Cardiac patients must cut ___ on saturated fats.' },
+    { pv: 'deal with', meaning: 'মোকাবিলা বা আলোচনা করা', sent: 'This chapter deals ___ respiratory physiology.' },
+    { pv: 'do away with', meaning: 'বিলুপ্ত বা বন্ধ করা', sent: 'Global efforts helped do away ___ smallpox.' },
+    { pv: 'fall through', meaning: 'ব্যর্থ হওয়া (পরিকল্পনা)', sent: 'The poorly funded trial fell ___.' },
+    { pv: 'get over', meaning: 'কাটিয়ে ওঠা (রোগ বা শোক)', sent: 'It took him two weeks to get ___ viral pneumonia.' },
+    { pv: 'give in', meaning: 'নতি স্বীকার করা / হার মানা', sent: 'Never give ___ to despair during admission prep.' },
+    { pv: 'give up', meaning: 'পরিত্যাগ করা', sent: 'He gave ___ smoking completely.' },
+    { pv: 'go through', meaning: 'মনোযোগ দিয়ে পড়া বা অভিজ্ঞতার মধ্য দিয়ে যাওয়া', sent: 'Go ___ the textbook summary before sleeping.' },
+    { pv: 'hold back', meaning: 'আটকে রাখা / দমন করা', sent: 'She could not hold ___ her tears of joy.' },
+    { pv: 'keep up', meaning: 'বজায় রাখা / তাল মিলিয়ে চলা', sent: 'Keep ___ your consistent daily study habit.' },
+    { pv: 'look after', meaning: 'দেখাশোনা বা যত্ন নেওয়া', sent: 'Nurses look ___ ICU patients round the clock.' },
+    { pv: 'look down upon', meaning: 'ঘৃণা বা অবজ্ঞা করা', sent: 'Never look ___ upon underprivileged patients.' },
+    { pv: 'look into', meaning: 'তদন্ত বা খতিয়ে দেখা', sent: 'The committee will look ___ the lab report.' },
+    { pv: 'look up', meaning: 'অভিধানে বা রেফারেন্সে শব্দ খোঁজা', sent: 'Look ___ the Latin root in a medical dictionary.' },
+    { pv: 'make out', meaning: 'বুঝতে পারা / পাঠোদ্ধার করা', sent: 'Pharmacists can easily make ___ doctors’ handwriting.' },
+    { pv: 'pass away', meaning: 'মারা যাওয়া', sent: 'The eminent surgeon passed ___ peacefully at 85.' },
+    { pv: 'put off', meaning: 'স্থগিত রাখা / পিছিয়ে দেওয়া', sent: 'Never put ___ today’s revision until tomorrow.' },
+    { pv: 'put out', meaning: 'আগুন বা বাতি নিভিয়ে দেওয়া', sent: 'Firefighters put ___ the lab fire promptly.' },
+    { pv: 'put up with', meaning: 'ধৈর্য ধরে সহ্য করা', sent: 'Hospital wards cannot put ___ with loud noise.' },
+    { pv: 'run out of', meaning: 'ফুরিয়ে যাওয়া / শেষ হয়ে যাওয়া', sent: 'The clinic ran ___ of insulin vials.' },
+    { pv: 'set up', meaning: 'স্থাপন বা প্রতিষ্ঠা করা', sent: 'They set ___ a mobile eye camp in the char area.' },
+    { pv: 'take after', meaning: 'সাদৃশ্য হওয়া (বাবা-মায়ের মতো দেখতে)', sent: 'The baby takes ___ her mother.' },
+    { pv: 'turn down', meaning: 'প্রত্যাখ্যান করা', sent: 'The journal turned ___ the incomplete manuscript.' },
+    { pv: 'work out', meaning: 'সমাধান করা বা ব্যায়াম করা', sent: 'She worked ___ fifty physics numericals today.' },
+    { pv: 'ward off', meaning: 'প্রতিহত করা (রোগ বা বিপদ)', sent: 'Vitamin C helps ward ___ scurvy.' },
+  ];
+  phrasals.forEach((ph, i) => {
+    const others = phrasals.filter((x) => x.pv !== ph.pv);
+    list.push(
+      buildMcq({
+        id: nextId(),
+        subjectId: 'eng',
+        medicalGroup: 'eng',
+        chapterId: 'eng_vocab_prep',
+        visualLessonId: 'english_grammar',
+        hscLevel: 'admission',
+        difficulty: i % 2 === 0 ? 'medical' : 'dental',
+        question: `What does the phrasal verb "${ph.pv}" mean?`,
+        correct: ph.meaning,
+        distractors: others.slice(i % 20, (i % 20) + 8).map((x) => x.meaning),
+        explanation: `"${ph.pv}" অর্থ "${ph.meaning}"। বাক্য: ${ph.sent}`,
+        reference: 'Medical Admission English · Phrasal Verbs',
+      })
+    );
+    list.push(
+      buildMcq({
+        id: nextId(),
+        subjectId: 'eng',
+        medicalGroup: 'eng',
+        chapterId: 'eng_vocab_prep',
+        visualLessonId: 'english_grammar',
+        hscLevel: 'admission',
+        difficulty: 'board',
+        question: `Which phrasal verb accurately matches "${ph.meaning}" in context: "${ph.sent}"?`,
+        correct: ph.pv,
+        distractors: others.slice((i + 10) % 20, ((i + 10) % 20) + 8).map((x) => x.pv),
+        explanation: `"${ph.meaning}" বোঝাতে "${ph.pv}" ব্যবহৃত হয়।`,
+        reference: 'Medical Admission English · Group Verb Context',
+      })
+    );
+  });
+
+  return list;
+}

@@ -1,0 +1,821 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Reusable Hardened Primitives ---
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'aayat6666@gmail.com';
+    }
+
+    function isSuperAdmin() {
+      return isBootstrappedAdmin()
+        || (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidShortId(id, maxLen) {
+      return id is string && id.size() >= 1 && id.size() <= maxLen && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidDateKey(dateKey) {
+      return dateKey is string && dateKey.size() == 10 && dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidSubjectId(subjectId) {
+      return subjectId in ['bio_1', 'bio_2', 'chem_1', 'chem_2', 'phys_1', 'phys_2', 'eng', 'gk'];
+    }
+
+    // --- Validation Blueprints: User Learning Data ---
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'displayName', 'email', 'targetExam', 'hscClass', 'dailyGoal', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'displayName', 'email', 'targetExam', 'hscClass', 'college', 'photoUrl', 'dailyGoal', 'accountStatus', 'adminNote', 'accessTier', 'accessStartsAt', 'accessExpiresAt', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.targetExam in ['medical', 'dental', 'hsc_science']
+        && data.hscClass in ['11', '12', 'admission']
+        && (!('college' in data) || (data.college is string && data.college.size() <= 150))
+        && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 1000))
+        && data.dailyGoal is int && data.dailyGoal >= 5 && data.dailyGoal <= 200
+        && (!('accountStatus' in data) || data.accountStatus in ['active', 'suspended'])
+        && (!('adminNote' in data) || (data.adminNote is string && data.adminNote.size() <= 300))
+        && (!('accessTier' in data) || data.accessTier in ['free_trial', 'enrolled_pro', 'lifetime_vip', 'restricted'])
+        && (!('accessStartsAt' in data) || data.accessStartsAt is timestamp)
+        && (!('accessExpiresAt' in data) || data.accessExpiresAt is timestamp)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAccessPolicy(data, configId) {
+      return configId == 'accessPolicy'
+        && data.keys().hasAll([
+          'id', 'trialDurationDays', 'proPriceBdt', 'proDurationDays', 'requireSignInForAccess',
+          'freeDailyQuestionLimit', 'freeQuestionBankLimit', 'freeVisualLessonLimit',
+          'allowFreePractice', 'allowFreeFlashcards', 'allowFreeQuestionBank', 'allowFreeWrongBank',
+          'allowFreeMockTest', 'allowFreeMedicalModel', 'allowFreeVisualHub', 'allowFreeWorksheets',
+          'bkashNumber', 'nagadNumber', 'rocketNumber', 'paymentInstructionsBn', 'updatedByUid', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'trialDurationDays', 'proPriceBdt', 'proDurationDays', 'requireSignInForAccess',
+          'freeDailyQuestionLimit', 'freeQuestionBankLimit', 'freeVisualLessonLimit',
+          'allowFreePractice', 'allowFreeFlashcards', 'allowFreeQuestionBank', 'allowFreeWrongBank',
+          'allowFreeMockTest', 'allowFreeMedicalModel', 'allowFreeVisualHub', 'allowFreeWorksheets',
+          'bkashNumber', 'nagadNumber', 'rocketNumber', 'paymentInstructionsBn', 'updatedByUid', 'updatedAt'
+        ])
+        && data.id == configId
+        && data.trialDurationDays is int && data.trialDurationDays >= 1 && data.trialDurationDays <= 90
+        && data.proPriceBdt is int && data.proPriceBdt >= 0 && data.proPriceBdt <= 50000
+        && data.proDurationDays is int && data.proDurationDays >= 1 && data.proDurationDays <= 1825
+        && data.requireSignInForAccess is bool
+        && data.freeDailyQuestionLimit is int && data.freeDailyQuestionLimit >= 1 && data.freeDailyQuestionLimit <= 500
+        && data.freeQuestionBankLimit is int && data.freeQuestionBankLimit >= 1 && data.freeQuestionBankLimit <= 2000
+        && data.freeVisualLessonLimit is int && data.freeVisualLessonLimit >= 1 && data.freeVisualLessonLimit <= 100
+        && data.allowFreePractice is bool
+        && data.allowFreeFlashcards is bool
+        && data.allowFreeQuestionBank is bool
+        && data.allowFreeWrongBank is bool
+        && data.allowFreeMockTest is bool
+        && data.allowFreeMedicalModel is bool
+        && data.allowFreeVisualHub is bool
+        && data.allowFreeWorksheets is bool
+        && data.bkashNumber is string && data.bkashNumber.size() <= 30
+        && data.nagadNumber is string && data.nagadNumber.size() <= 30
+        && data.rocketNumber is string && data.rocketNumber.size() <= 30
+        && data.paymentInstructionsBn is string && data.paymentInstructionsBn.size() <= 600
+        && isValidId(data.updatedByUid)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidEnrollmentRequest(data, requestId) {
+      return data.keys().hasAll([
+          'id', 'userId', 'userName', 'userEmail', 'planTier', 'durationDays',
+          'amountBdt', 'paymentMethod', 'senderNumber', 'transactionId', 'studentNote',
+          'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'userName', 'userEmail', 'planTier', 'durationDays',
+          'amountBdt', 'paymentMethod', 'senderNumber', 'transactionId', 'studentNote',
+          'status', 'adminNote', 'reviewedByUid', 'createdAt', 'updatedAt'
+        ])
+        && isValidShortId(data.id, 80)
+        && data.id == requestId
+        && isValidId(data.userId)
+        && data.userName is string && data.userName.size() >= 1 && data.userName.size() <= 120
+        && data.userEmail is string && data.userEmail.size() >= 3 && data.userEmail.size() <= 200
+        && data.planTier == 'enrolled_pro'
+        && data.durationDays is int && data.durationDays >= 1 && data.durationDays <= 1825
+        && data.amountBdt is int && data.amountBdt >= 0 && data.amountBdt <= 50000
+        && data.paymentMethod in ['bkash', 'nagad', 'rocket', 'bank']
+        && data.senderNumber is string && data.senderNumber.size() >= 4 && data.senderNumber.size() <= 30
+        && data.transactionId is string && data.transactionId.size() >= 3 && data.transactionId.size() <= 80
+        && data.studentNote is string && data.studentNote.size() <= 300
+        && data.status in ['pending', 'approved', 'rejected']
+        && (!('adminNote' in data) || (data.adminNote is string && data.adminNote.size() <= 300))
+        && (!('reviewedByUid' in data) || isValidId(data.reviewedByUid))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTopicStat(data, userId, topicKey) {
+      return data.keys().hasAll([
+          'userId', 'topicKey', 'subjectId', 'chapterId', 'attempted', 'correct', 'wrong', 'totalTimeSec', 'lastPracticedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'topicKey', 'subjectId', 'chapterId', 'attempted', 'correct', 'wrong', 'totalTimeSec', 'lastPracticedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && isValidShortId(data.topicKey, 80)
+        && data.topicKey == topicKey
+        && isValidShortId(data.subjectId, 40)
+        && isValidShortId(data.chapterId, 80)
+        && data.attempted is int && data.attempted >= 0 && data.attempted <= 100000
+        && data.correct is int && data.correct >= 0 && data.correct <= data.attempted
+        && data.wrong is int && data.wrong >= 0 && (data.correct + data.wrong) <= data.attempted
+        && data.totalTimeSec is int && data.totalTimeSec >= 0 && data.totalTimeSec <= 10000000
+        && data.lastPracticedAt is timestamp;
+    }
+
+    function isValidTestAttempt(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'testId', 'testTitle', 'testType', 'subjectId',
+          'totalQuestions', 'answeredCount', 'correctCount', 'wrongCount', 'skippedCount',
+          'negativeMarks', 'netScore', 'maxScore', 'durationSec', 'weakTopics', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'testId', 'testTitle', 'testType', 'subjectId',
+          'totalQuestions', 'answeredCount', 'correctCount', 'wrongCount', 'skippedCount',
+          'negativeMarks', 'netScore', 'maxScore', 'durationSec', 'weakTopics', 'createdAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && isValidShortId(data.testId, 80)
+        && data.testTitle is string && data.testTitle.size() >= 1 && data.testTitle.size() <= 160
+        && data.testType in ['mock_test', 'medical_model', 'dental_model', 'practice_drill']
+        && data.subjectId is string && data.subjectId.size() >= 1 && data.subjectId.size() <= 40
+        && data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 200
+        && data.answeredCount is int && data.answeredCount >= 0 && data.answeredCount <= data.totalQuestions
+        && data.correctCount is int && data.correctCount >= 0 && data.correctCount <= data.answeredCount
+        && data.wrongCount is int && data.wrongCount >= 0 && (data.correctCount + data.wrongCount) <= data.answeredCount
+        && data.skippedCount is int && data.skippedCount >= 0 && data.skippedCount <= data.totalQuestions
+        && data.negativeMarks is number && data.negativeMarks >= 0 && data.negativeMarks <= 200
+        && data.netScore is number && data.netScore >= -100 && data.netScore <= 200
+        && data.maxScore is number && data.maxScore >= 1 && data.maxScore <= 200
+        && data.durationSec is int && data.durationSec >= 0 && data.durationSec <= 18000
+        && data.weakTopics is list && data.weakTopics.size() <= 15
+        && (data.weakTopics.size() == 0 || (data.weakTopics[0] is string && data.weakTopics[0].size() <= 80))
+        && data.createdAt is timestamp;
+    }
+
+    function isValidBookmark(data, userId, questionId) {
+      return data.keys().hasAll(['userId', 'questionId', 'subjectId', 'chapterId', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'questionId', 'subjectId', 'chapterId', 'createdAt'])
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && isValidShortId(data.questionId, 80)
+        && data.questionId == questionId
+        && isValidShortId(data.subjectId, 40)
+        && isValidShortId(data.chapterId, 80)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidWrongAnswer(data, userId, questionId) {
+      return data.keys().hasAll([
+          'userId', 'questionId', 'subjectId', 'chapterId', 'selectedOptionIndex', 'wrongCount', 'lastWrongAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'questionId', 'subjectId', 'chapterId', 'selectedOptionIndex', 'wrongCount', 'lastWrongAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && isValidShortId(data.questionId, 80)
+        && data.questionId == questionId
+        && isValidShortId(data.subjectId, 40)
+        && isValidShortId(data.chapterId, 80)
+        && data.selectedOptionIndex is int && data.selectedOptionIndex >= 0 && data.selectedOptionIndex <= 3
+        && data.wrongCount is int && data.wrongCount >= 1 && data.wrongCount <= 1000
+        && data.lastWrongAt is timestamp;
+    }
+
+    // --- Validation Blueprints: Daily Leaderboard ---
+    function isValidDailyLeaderboard(data, dateKey) {
+      return data.keys().hasAll(['dateKey', 'createdAt'])
+        && data.keys().hasOnly(['dateKey', 'createdAt'])
+        && isValidDateKey(data.dateKey)
+        && data.dateKey == dateKey
+        && data.createdAt is timestamp;
+    }
+
+    function isValidDailyPerformerEntry(data, dateKey, userId) {
+      return data.keys().hasAll([
+          'userId', 'dateKey', 'displayName', 'photoUrl', 'targetExam',
+          'questionsAttempted', 'correctCount', 'testsCompleted', 'bestNetScore',
+          'score', 'visibility', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'dateKey', 'displayName', 'photoUrl', 'college', 'targetExam',
+          'questionsAttempted', 'correctCount', 'testsCompleted', 'bestNetScore',
+          'score', 'visibility', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && isValidDateKey(data.dateKey)
+        && data.dateKey == dateKey
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.photoUrl is string && data.photoUrl.size() <= 1000
+        && (!('college' in data) || (data.college is string && data.college.size() <= 150))
+        && data.targetExam in ['medical', 'dental', 'hsc_science']
+        && data.questionsAttempted is int && data.questionsAttempted >= 0 && data.questionsAttempted <= 5000
+        && data.correctCount is int && data.correctCount >= 0 && data.correctCount <= data.questionsAttempted
+        && data.testsCompleted is int && data.testsCompleted >= 0 && data.testsCompleted <= 200
+        && data.bestNetScore is number && data.bestNetScore >= -50 && data.bestNetScore <= 200
+        && data.score is number && data.score >= 0 && data.score <= 200000
+        && data.score <= (data.questionsAttempted * 2 + data.correctCount * 10 + data.testsCompleted * 40 + 200)
+        && data.visibility == 'public'
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Validation Blueprints: Super Admin & Topic Content ---
+    function isValidAdminUser(data, adminId) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'role', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == adminId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.role == 'super_admin'
+        && data.createdAt is timestamp;
+    }
+
+    function isValidCustomInfographic(data, itemId) {
+      return data.keys().hasAll([
+          'id', 'subjectId', 'chapterId', 'topicName', 'titleBn', 'subtitleBn',
+          'summaryBn', 'layoutStyle', 'imageUrl', 'nodes', 'keyTakeawaysBn',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'subjectId', 'chapterId', 'topicName', 'titleBn', 'subtitleBn',
+          'summaryBn', 'layoutStyle', 'imageUrl', 'nodes', 'keyTakeawaysBn',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && isValidShortId(data.id, 80)
+        && data.id == itemId
+        && isValidSubjectId(data.subjectId)
+        && isValidShortId(data.chapterId, 80)
+        && data.topicName is string && data.topicName.size() >= 1 && data.topicName.size() <= 160
+        && data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 180
+        && data.subtitleBn is string && data.subtitleBn.size() <= 260
+        && data.summaryBn is string && data.summaryBn.size() >= 1 && data.summaryBn.size() <= 2000
+        && data.layoutStyle in ['concept_map', 'process_flow', 'comparison_table']
+        && data.imageUrl is string && data.imageUrl.size() <= 1000
+        && data.nodes is list && data.nodes.size() >= 1 && data.nodes.size() <= 10
+        && data.nodes[0] is map
+        && data.keyTakeawaysBn is list && data.keyTakeawaysBn.size() <= 8
+        && (data.keyTakeawaysBn.size() == 0 || (data.keyTakeawaysBn[0] is string && data.keyTakeawaysBn[0].size() <= 300))
+        && data.status in ['published', 'draft']
+        && isValidId(data.createdByUid)
+        && data.createdByEmail is string && data.createdByEmail.size() >= 3 && data.createdByEmail.size() <= 200
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCustomVideo(data, itemId) {
+      return data.keys().hasAll([
+          'id', 'subjectId', 'chapterId', 'topicName', 'titleBn', 'instructorBn',
+          'durationMin', 'videoUrl', 'boardSummaryBn', 'boardPoints', 'narrationBn',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'subjectId', 'chapterId', 'topicName', 'titleBn', 'instructorBn',
+          'durationMin', 'videoUrl', 'boardSummaryBn', 'boardPoints', 'narrationBn',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && isValidShortId(data.id, 80)
+        && data.id == itemId
+        && isValidSubjectId(data.subjectId)
+        && isValidShortId(data.chapterId, 80)
+        && data.topicName is string && data.topicName.size() >= 1 && data.topicName.size() <= 160
+        && data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 180
+        && data.instructorBn is string && data.instructorBn.size() >= 1 && data.instructorBn.size() <= 120
+        && data.durationMin is int && data.durationMin >= 1 && data.durationMin <= 240
+        && data.videoUrl is string && data.videoUrl.size() <= 500
+        && data.boardSummaryBn is string && data.boardSummaryBn.size() <= 2000
+        && data.boardPoints is list && data.boardPoints.size() <= 10
+        && (data.boardPoints.size() == 0 || (data.boardPoints[0] is string && data.boardPoints[0].size() <= 300))
+        && data.narrationBn is string && data.narrationBn.size() <= 2000
+        && data.status in ['published', 'draft']
+        && isValidId(data.createdByUid)
+        && data.createdByEmail is string && data.createdByEmail.size() >= 3 && data.createdByEmail.size() <= 200
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCustomQuestion(data, itemId) {
+      return data.keys().hasAll([
+          'id', 'subjectId', 'medicalGroup', 'chapterId', 'topicName', 'hscLevel',
+          'difficulty', 'question', 'options', 'correctIndex', 'explanation',
+          'reference', 'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'subjectId', 'medicalGroup', 'chapterId', 'topicName', 'hscLevel',
+          'difficulty', 'boardName', 'boardYear', 'pastExamType', 'pastExamSession',
+          'question', 'options', 'correctIndex', 'explanation', 'reference',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && isValidShortId(data.id, 80)
+        && data.id == itemId
+        && isValidSubjectId(data.subjectId)
+        && data.medicalGroup in ['bio', 'chem', 'phys', 'eng', 'gk']
+        && isValidShortId(data.chapterId, 80)
+        && data.topicName is string && data.topicName.size() >= 1 && data.topicName.size() <= 160
+        && data.hscLevel in ['11', '12', 'admission']
+        && data.difficulty in ['board', 'medical', 'dental']
+        && (!('boardName' in data) || (data.boardName is string && data.boardName.size() <= 30))
+        && (!('boardYear' in data) || (data.boardYear is string && data.boardYear.size() <= 10))
+        && (!('pastExamType' in data) || data.pastExamType in ['MBBS', 'BDS'])
+        && (!('pastExamSession' in data) || (data.pastExamSession is string && data.pastExamSession.size() <= 20))
+        && data.question is string && data.question.size() >= 1 && data.question.size() <= 600
+        && data.options is list && data.options.size() == 4
+        && data.options[0] is string && data.options[0].size() >= 1 && data.options[0].size() <= 250
+        && data.correctIndex is int && data.correctIndex >= 0 && data.correctIndex <= 3
+        && data.explanation is string && data.explanation.size() >= 1 && data.explanation.size() <= 1200
+        && data.reference is string && data.reference.size() >= 1 && data.reference.size() <= 240
+        && data.status in ['published', 'draft']
+        && isValidId(data.createdByUid)
+        && data.createdByEmail is string && data.createdByEmail.size() >= 3 && data.createdByEmail.size() <= 200
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCustomWorksheet(data, itemId) {
+      return data.keys().hasAll([
+          'id', 'subjectId', 'chapterId', 'topicName', 'titleBn', 'worksheetType',
+          'difficulty', 'estimatedMinutes', 'instructionsBn', 'attachmentUrl', 'tasks',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'subjectId', 'chapterId', 'topicName', 'titleBn', 'worksheetType',
+          'difficulty', 'estimatedMinutes', 'instructionsBn', 'attachmentUrl', 'tasks',
+          'status', 'createdByUid', 'createdByEmail', 'createdAt', 'updatedAt'
+        ])
+        && isValidShortId(data.id, 80)
+        && data.id == itemId
+        && isValidSubjectId(data.subjectId)
+        && isValidShortId(data.chapterId, 80)
+        && data.topicName is string && data.topicName.size() >= 1 && data.topicName.size() <= 160
+        && data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 180
+        && data.worksheetType in ['practice_sheet', 'cq_srijonshil', 'formula_sheet', 'assignment']
+        && data.difficulty in ['hsc', 'medical', 'dental']
+        && data.estimatedMinutes is int && data.estimatedMinutes >= 5 && data.estimatedMinutes <= 180
+        && data.instructionsBn is string && data.instructionsBn.size() <= 1500
+        && data.attachmentUrl is string && data.attachmentUrl.size() <= 500
+        && data.tasks is list && data.tasks.size() >= 1 && data.tasks.size() <= 20
+        && data.tasks[0] is map
+        && data.status in ['published', 'draft']
+        && isValidId(data.createdByUid)
+        && data.createdByEmail is string && data.createdByEmail.size() >= 3 && data.createdByEmail.size() <= 200
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- User Private Collections ---
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isSuperAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (
+            isOwner(userId)
+            && incoming().uid == request.auth.uid
+            && (!('accountStatus' in incoming()) || incoming().accountStatus == 'active')
+            && !('adminNote' in incoming())
+            && (!('accessTier' in incoming()) || incoming().accessTier == 'free_trial')
+            && !('accessStartsAt' in incoming())
+            && !('accessExpiresAt' in incoming())
+          )
+          || isSuperAdmin()
+        );
+
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            isSuperAdmin()
+            && incoming().email == existing().email
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName', 'targetExam', 'hscClass', 'college', 'dailyGoal',
+              'accountStatus', 'adminNote', 'accessTier', 'accessStartsAt', 'accessExpiresAt', 'updatedAt'
+            ])
+          )
+          || (
+            isOwner(userId)
+            && incoming().uid == request.auth.uid
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName', 'email', 'targetExam', 'hscClass', 'college', 'photoUrl', 'dailyGoal', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if (isVerifiedUser() && isValidId(userId) && isOwner(userId))
+        || (isBootstrappedAdmin() && isValidId(userId) && userId != request.auth.uid);
+
+      // Subcollection: Chapter/Topic Mastery Stats
+      match /topicStats/{topicKey} {
+        allow get: if isValidId(userId) && isValidShortId(topicKey, 80) && (isOwner(userId) || isSuperAdmin());
+        allow list: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isBootstrappedAdmin();
+
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(topicKey, 80)
+          && isOwner(userId)
+          && isValidTopicStat(incoming(), userId, topicKey)
+          && incoming().lastPracticedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(topicKey, 80)
+          && isOwner(userId)
+          && isValidTopicStat(incoming(), userId, topicKey)
+          && incoming().userId == existing().userId
+          && incoming().topicKey == existing().topicKey
+          && incoming().subjectId == existing().subjectId
+          && incoming().chapterId == existing().chapterId
+          && incoming().lastPracticedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'attempted', 'correct', 'wrong', 'totalTimeSec', 'lastPracticedAt'
+          ]);
+
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(topicKey, 80)
+          && isOwner(userId);
+      }
+
+      // Subcollection: Test Attempts
+      match /testAttempts/{attemptId} {
+        allow get: if isValidId(userId) && isValidId(attemptId) && (isOwner(userId) || isSuperAdmin());
+        allow list: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isBootstrappedAdmin();
+
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(attemptId)
+          && isOwner(userId)
+          && isValidTestAttempt(incoming(), userId)
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow update: if false;
+
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(attemptId)
+          && isOwner(userId);
+      }
+
+      // Subcollection: Bookmarked Questions
+      match /bookmarks/{questionId} {
+        allow get: if isValidId(userId) && isValidShortId(questionId, 80) && (isOwner(userId) || isSuperAdmin());
+        allow list: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isBootstrappedAdmin();
+
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(questionId, 80)
+          && isOwner(userId)
+          && isValidBookmark(incoming(), userId, questionId)
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow update: if false;
+
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(questionId, 80)
+          && isOwner(userId);
+      }
+
+      // Subcollection: Wrong Answer Bank
+      match /wrongAnswers/{questionId} {
+        allow get: if isValidId(userId) && isValidShortId(questionId, 80) && (isOwner(userId) || isSuperAdmin());
+        allow list: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isBootstrappedAdmin();
+
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(questionId, 80)
+          && isOwner(userId)
+          && isValidWrongAnswer(incoming(), userId, questionId)
+          && incoming().lastWrongAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(questionId, 80)
+          && isOwner(userId)
+          && isValidWrongAnswer(incoming(), userId, questionId)
+          && incoming().userId == existing().userId
+          && incoming().questionId == existing().questionId
+          && incoming().subjectId == existing().subjectId
+          && incoming().chapterId == existing().chapterId
+          && incoming().lastWrongAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'selectedOptionIndex', 'wrongCount', 'lastWrongAt'
+          ]);
+
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidShortId(questionId, 80)
+          && isOwner(userId);
+      }
+    }
+
+    // --- Public-Safe Daily Top Performers Leaderboard ---
+    match /dailyLeaderboards/{dateKey} {
+      allow get: if isValidDateKey(dateKey);
+      allow list: if false;
+
+      allow create: if isVerifiedUser()
+        && isValidDateKey(dateKey)
+        && isValidDailyLeaderboard(incoming(), dateKey)
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isSuperAdmin() && isValidDateKey(dateKey);
+
+      match /entries/{userId} {
+        allow get: if isValidDateKey(dateKey)
+          && isValidId(userId)
+          && existing().visibility == 'public';
+        allow list: if resource.data.visibility == 'public';
+
+        allow create: if isVerifiedUser()
+          && isValidDateKey(dateKey)
+          && isValidId(userId)
+          && isOwner(userId)
+          && isValidDailyPerformerEntry(incoming(), dateKey, userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/dailyLeaderboards/$(dateKey));
+
+        allow update: if isVerifiedUser()
+          && isValidDateKey(dateKey)
+          && isValidId(userId)
+          && isOwner(userId)
+          && isValidDailyPerformerEntry(incoming(), dateKey, userId)
+          && incoming().userId == existing().userId
+          && incoming().dateKey == existing().dateKey
+          && incoming().visibility == existing().visibility
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'photoUrl', 'college', 'targetExam',
+            'questionsAttempted', 'correctCount', 'testsCompleted',
+            'bestNetScore', 'score', 'updatedAt'
+          ]);
+
+        allow delete: if (isVerifiedUser()
+            && isValidDateKey(dateKey)
+            && isValidId(userId)
+            && isOwner(userId))
+          || (isSuperAdmin() && isValidDateKey(dateKey) && isValidId(userId));
+      }
+    }
+
+    // --- Super Admin Role Registry ---
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isBootstrappedAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      allow create: if isBootstrappedAdmin()
+        && isValidId(adminId)
+        && isValidAdminUser(incoming(), adminId)
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isBootstrappedAdmin() && isValidId(adminId);
+    }
+
+    // --- Topic-Based Infographics ---
+    match /customInfographics/{itemId} {
+      allow get: if isValidShortId(itemId, 80)
+        && (existing().status == 'published' || isSuperAdmin());
+      allow list: if resource.data.status == 'published' || isBootstrappedAdmin();
+
+      allow create: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomInfographic(incoming(), itemId)
+        && incoming().createdByUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomInfographic(incoming(), itemId)
+        && incoming().id == existing().id
+        && incoming().createdByUid == existing().createdByUid
+        && incoming().createdByEmail == existing().createdByEmail
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'subjectId', 'chapterId', 'topicName', 'titleBn', 'subtitleBn',
+          'summaryBn', 'layoutStyle', 'imageUrl', 'nodes', 'keyTakeawaysBn',
+          'status', 'updatedAt'
+        ]);
+
+      allow delete: if isSuperAdmin() && isValidShortId(itemId, 80);
+    }
+
+    // --- Topic-Based Video Lectures ---
+    match /customVideos/{itemId} {
+      allow get: if isValidShortId(itemId, 80)
+        && (existing().status == 'published' || isSuperAdmin());
+      allow list: if resource.data.status == 'published' || isBootstrappedAdmin();
+
+      allow create: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomVideo(incoming(), itemId)
+        && incoming().createdByUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomVideo(incoming(), itemId)
+        && incoming().id == existing().id
+        && incoming().createdByUid == existing().createdByUid
+        && incoming().createdByEmail == existing().createdByEmail
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'subjectId', 'chapterId', 'topicName', 'titleBn', 'instructorBn',
+          'durationMin', 'videoUrl', 'boardSummaryBn', 'boardPoints', 'narrationBn',
+          'status', 'updatedAt'
+        ]);
+
+      allow delete: if isSuperAdmin() && isValidShortId(itemId, 80);
+    }
+
+    // --- Topic-Based MCQ Questions ---
+    match /customQuestions/{itemId} {
+      allow get: if isValidShortId(itemId, 80)
+        && (existing().status == 'published' || isSuperAdmin());
+      allow list: if resource.data.status == 'published' || isBootstrappedAdmin();
+
+      allow create: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomQuestion(incoming(), itemId)
+        && incoming().createdByUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomQuestion(incoming(), itemId)
+        && incoming().id == existing().id
+        && incoming().createdByUid == existing().createdByUid
+        && incoming().createdByEmail == existing().createdByEmail
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'subjectId', 'medicalGroup', 'chapterId', 'topicName', 'hscLevel',
+          'difficulty', 'boardName', 'boardYear', 'pastExamType', 'pastExamSession',
+          'question', 'options', 'correctIndex', 'explanation', 'reference',
+          'status', 'updatedAt'
+        ]);
+
+      allow delete: if isSuperAdmin() && isValidShortId(itemId, 80);
+    }
+
+    // --- Topic-Based Worksheets ---
+    match /customWorksheets/{itemId} {
+      allow get: if isValidShortId(itemId, 80)
+        && (existing().status == 'published' || isSuperAdmin());
+      allow list: if resource.data.status == 'published' || isBootstrappedAdmin();
+
+      allow create: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomWorksheet(incoming(), itemId)
+        && incoming().createdByUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSuperAdmin()
+        && isValidShortId(itemId, 80)
+        && isValidCustomWorksheet(incoming(), itemId)
+        && incoming().id == existing().id
+        && incoming().createdByUid == existing().createdByUid
+        && incoming().createdByEmail == existing().createdByEmail
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'subjectId', 'chapterId', 'topicName', 'titleBn', 'worksheetType',
+          'difficulty', 'estimatedMinutes', 'instructionsBn', 'attachmentUrl', 'tasks',
+          'status', 'updatedAt'
+        ]);
+
+      allow delete: if isSuperAdmin() && isValidShortId(itemId, 80);
+    }
+
+    // --- Dynamic Access Policy Configuration ---
+    match /appConfig/{configId} {
+      allow get: if configId == 'accessPolicy';
+      allow list: if false;
+
+      allow create: if isSuperAdmin()
+        && configId == 'accessPolicy'
+        && isValidAccessPolicy(incoming(), configId)
+        && incoming().updatedByUid == request.auth.uid
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSuperAdmin()
+        && configId == 'accessPolicy'
+        && isValidAccessPolicy(incoming(), configId)
+        && incoming().id == existing().id
+        && incoming().updatedByUid == request.auth.uid
+        && incoming().updatedAt == request.time;
+
+      allow delete: if isBootstrappedAdmin() && configId == 'accessPolicy';
+    }
+
+    // --- Student Annual Pro Enrollment Requests ---
+    match /enrollmentRequests/{requestId} {
+      allow get: if isValidShortId(requestId, 80)
+        && (isSuperAdmin() || (isSignedIn() && existing().userId == request.auth.uid));
+
+      allow list: if (isSignedIn() && resource.data.userId == request.auth.uid) || isBootstrappedAdmin();
+
+      allow create: if isVerifiedUser()
+        && isValidShortId(requestId, 80)
+        && isValidEnrollmentRequest(incoming(), requestId)
+        && incoming().userId == request.auth.uid
+        && incoming().status == 'pending'
+        && !('adminNote' in incoming())
+        && !('reviewedByUid' in incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSuperAdmin()
+        && isValidShortId(requestId, 80)
+        && isValidEnrollmentRequest(incoming(), requestId)
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'adminNote', 'reviewedByUid', 'updatedAt'
+        ]);
+
+      allow delete: if (isVerifiedUser()
+          && isValidShortId(requestId, 80)
+          && existing().userId == request.auth.uid
+          && existing().status == 'pending')
+        || (isSuperAdmin() && isValidShortId(requestId, 80));
+    }
+  }
+}
