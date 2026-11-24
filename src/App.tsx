@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getRedirectResult,
   onAuthStateChanged,
@@ -104,17 +104,20 @@ import { WorksheetsView } from './components/WorksheetsView';
 import { SuperAdminPanelView } from './components/SuperAdminPanelView';
 import { EnrollmentModal } from './components/EnrollmentModal';
 import { AccessGateCard } from './components/AccessGateCard';
+import { LandingPageView } from './components/LandingPageView';
 import { BRAND_NAME, BrandLogo } from './components/BrandLogo';
 import { useTheme } from './hooks/useTheme';
 
 function MedExcelApp() {
   const { theme, toggleTheme } = useTheme();
+  const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
+  const enterAppAfterSignInRef = useRef(false);
 
   // Cloud state
   const [cloudProfile, setCloudProfile] = useState<UserProfile | null>(null);
@@ -167,21 +170,35 @@ function MedExcelApp() {
   }
 
   useEffect(() => {
-    void getRedirectResult(auth).catch((err) => {
-      console.error('Google redirect sign-in error:', err);
-      const code =
-        err && typeof err === 'object' && 'code' in err
-          ? String((err as { code?: unknown }).code)
-          : '';
-      if (code === 'auth/unauthorized-domain') {
-        const host = typeof window !== 'undefined' ? window.location.hostname : '';
-        setAuthError(
-          `এই ডোমেইনটি (${host}) Firebase-এর Authorized domains-এ যুক্ত নেই। Firebase Console থেকে ডোমেইনটি যোগ করুন।`
-        );
-      } else if (code && code !== 'auth/popup-closed-by-user') {
-        setAuthError(`গুগল সাইন-ইন সম্পন্ন করা যায়নি (${code})। অনুগ্রহ করে আবার চেষ্টা করুন।`);
-      }
-    });
+    void getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user && typeof window !== 'undefined') {
+          const shouldEnter = window.sessionStorage.getItem('wca_enter_after_redirect') === '1';
+          window.sessionStorage.removeItem('wca_enter_after_redirect');
+          if (shouldEnter) {
+            setActiveTab('dashboard');
+            setShowLanding(false);
+          }
+        }
+      })
+      .catch((err) => {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('wca_enter_after_redirect');
+        }
+        console.error('Google redirect sign-in error:', err);
+        const code =
+          err && typeof err === 'object' && 'code' in err
+            ? String((err as { code?: unknown }).code)
+            : '';
+        if (code === 'auth/unauthorized-domain') {
+          const host = typeof window !== 'undefined' ? window.location.hostname : '';
+          setAuthError(
+            `এই ডোমেইনটি (${host}) Firebase-এর Authorized domains-এ যুক্ত নেই। Firebase Console থেকে ডোমেইনটি যোগ করুন।`
+          );
+        } else if (code && code !== 'auth/popup-closed-by-user') {
+          setAuthError(`গুগল সাইন-ইন সম্পন্ন করা যায়নি (${code})। অনুগ্রহ করে আবার চেষ্টা করুন।`);
+        }
+      });
 
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
@@ -335,6 +352,12 @@ function MedExcelApp() {
     setAuthError(null);
     try {
       await signInWithPopup(auth, googleProvider);
+      if (enterAppAfterSignInRef.current) {
+        enterAppAfterSignInRef.current = false;
+        setActiveTab('dashboard');
+        setShowLanding(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err) {
       console.error('Google Sign-In error:', err);
       const code =
@@ -344,9 +367,15 @@ function MedExcelApp() {
 
       if (code === 'auth/popup-blocked') {
         try {
+          if (enterAppAfterSignInRef.current && typeof window !== 'undefined') {
+            window.sessionStorage.setItem('wca_enter_after_redirect', '1');
+          }
           await signInWithRedirect(auth, googleProvider);
           return;
         } catch (redirectErr) {
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.removeItem('wca_enter_after_redirect');
+          }
           console.error('Google redirect fallback error:', redirectErr);
           setAuthError('ব্রাউজারে পপ-আপ ব্লক করা আছে। পপ-আপ অনুমতি দিয়ে আবার চেষ্টা করুন।');
           return;
@@ -374,6 +403,7 @@ function MedExcelApp() {
         );
       }
     } finally {
+      enterAppAfterSignInRef.current = false;
       setAuthLoading(false);
     }
   };
@@ -1071,6 +1101,35 @@ function MedExcelApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (showLanding) {
+    return (
+      <LandingPageView
+        user={user}
+        authLoading={authLoading}
+        authError={authError}
+        onDismissAuthError={() => setAuthError(null)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onSignIn={() => {
+          enterAppAfterSignInRef.current = true;
+          void handleSignIn();
+        }}
+        onEnterApp={(tab = 'dashboard') => {
+          if (tab === 'practice') {
+            setPracticeSubject('all');
+            setPracticeChapter('all');
+          }
+          if (tab === 'medical_model') {
+            setAutoStartPastYearKey(0);
+          }
+          setActiveTab(tab);
+          setShowLanding(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bio-canvas-bg text-[#1D1336] dark:text-[#F2EDFF] overflow-x-clip transition-colors duration-200">
       {/* Ambient 3D Volumetric Spheres for Real Frosted-Glass Refraction */}
@@ -1102,6 +1161,10 @@ function MedExcelApp() {
         onToggleTheme={toggleTheme}
         resolvedAccess={resolvedAccess}
         onOpenEnrollModal={() => setEnrollModalOpen(true)}
+        onBackToLanding={() => {
+          setShowLanding(true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       {authError && (

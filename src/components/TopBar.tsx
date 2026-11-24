@@ -17,6 +17,7 @@ interface TopBarProps {
   onToggleTheme: () => void;
   resolvedAccess?: ResolvedUserAccess;
   onOpenEnrollModal?: () => void;
+  onBackToLanding?: () => void;
 }
 
 const NAV_ITEMS: { id: AppTab; label: string }[] = [
@@ -43,6 +44,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleTheme,
   resolvedAccess,
   onOpenEnrollModal,
+  onBackToLanding,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -84,7 +86,19 @@ export const TopBar: React.FC<TopBarProps> = ({
         </button>
 
         {/* Zone 2: Concise single-line text nav links */}
-        <nav className="hidden lg:flex items-center gap-2.5 xl:gap-4" aria-label="প্রধান নেভিগেশন">
+        <nav className="hidden lg:flex items-center gap-2 xl:gap-3.5" aria-label="প্রধান নেভিগেশন">
+          {onBackToLanding && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onBackToLanding();
+              }}
+              className="relative py-2 text-xs xl:text-[13px] font-medium text-[#554578] dark:text-[#B5A9D6] hover:text-[#1D1336] dark:hover:text-white transition-colors whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-[#6D4ACF] dark:focus-visible:outline-[#A78BFA]"
+            >
+              হোম
+            </button>
+          )}
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
@@ -191,6 +205,18 @@ export const TopBar: React.FC<TopBarProps> = ({
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-white/80 dark:border-white/10 bg-white/85 dark:bg-[#120D24]/95 backdrop-blur-2xl px-4 py-3 space-y-1 shadow-xl">
+          {onBackToLanding && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onBackToLanding();
+              }}
+              className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#554578] dark:text-[#B5A9D6] hover:bg-white/70 dark:hover:bg-white/10 transition-all"
+            >
+              হোম (ল্যান্ডিং পেজ)
+            </button>
+          )}
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
