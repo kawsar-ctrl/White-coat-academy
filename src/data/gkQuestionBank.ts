@@ -19,6 +19,14 @@ import { buildGkStructuredM } from './gkStructuredM';
 import { buildGkStructuredN } from './gkStructuredN';
 import { buildGkStructuredO } from './gkStructuredO';
 import { buildGkStructuredP } from './gkStructuredP';
+import { buildGkStructuredQ } from './gkStructuredQ';
+import { buildGkStructuredR } from './gkStructuredR';
+import { buildGkStructuredS } from './gkStructuredS';
+import { buildGkStructuredT } from './gkStructuredT';
+import { buildGkStructuredU } from './gkStructuredU';
+import { buildGkStructuredV } from './gkStructuredV';
+import { buildGkStructuredW } from './gkStructuredW';
+import { buildGkStructuredX } from './gkStructuredX';
 
 const ALL_GK_FACTS = [...GK_FACTS_PART1, ...GK_FACTS_PART2, ...GK_FACTS_PART3];
 
@@ -136,6 +144,14 @@ const RAW_GK_POOL: McqQuestion[] = [
   ...buildGkStructuredN(),
   ...buildGkStructuredO(),
   ...buildGkStructuredP(),
+  ...buildGkStructuredQ(),
+  ...buildGkStructuredR(),
+  ...buildGkStructuredS(),
+  ...buildGkStructuredT(),
+  ...buildGkStructuredU(),
+  ...buildGkStructuredV(),
+  ...buildGkStructuredW(),
+  ...buildGkStructuredX(),
 ];
 
 const seenGkText = new Set<string>();
@@ -152,4 +168,4 @@ for (const q of RAW_GK_POOL) {
   });
 }
 
-export const GK_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_GK.slice(0, 4000);
+export const GK_EXPANDED_QUESTIONS: McqQuestion[] = DEDUPED_GK.slice(0, 6000);
